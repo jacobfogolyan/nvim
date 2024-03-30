@@ -1,5 +1,5 @@
 return {
--- string then github
+-- string is github url without gihub.com at start
  "catppuccin/nvim",
  config = function ()
 	 require("catppuccin").setup({
