@@ -23,7 +23,9 @@ return {
 				"fish",
 				"css",
 				"lua",
-				"vue"
+				"vue",
+				"javascript",
+				"tsx"
 			},
 
 			-- Install parsers synchronously (only applied to `ensure_installed`)
