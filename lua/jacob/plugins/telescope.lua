@@ -1,6 +1,9 @@
 return {
 	"nvim-telescope/telescope.nvim",
 	tag = '0.1.6',
+	dependencies = {
+		"nvim-tree/nvim-web-devicons",
+	},
 	config = function()
 		local telescope = require("telescope")
 		telescope.setup {
