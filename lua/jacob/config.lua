@@ -56,6 +56,10 @@ end
 -- Hide intro screen
 vim.opt.shortmess:append "I"
 
+vim.opt.laststatus = 2
+vim.opt.showmode = true
+vim.o.statusline = "%f %h%m%r %=%-14.(%l,%c%V%) %P"
+
 -- Netrw sizing
 vim.g.netrw_browse_split = 0
 vim.g.netrw_banner = 0
