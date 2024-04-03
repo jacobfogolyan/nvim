@@ -7,11 +7,10 @@ return {
 	},
 	config = function()
 		require("nvim-tree").setup {
-			vim = {
-				sorting = {
-					active = true,
-					method = "name_asc"
-				}
+			sort = {
+				sorter = "name",
+				folders_first = true,
+				files_first = false,
 			},
 			filters = {
 				dotfiles = false,
