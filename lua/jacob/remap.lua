@@ -54,3 +54,17 @@ vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
 vim.keymap.set("n", "<leader><leader>", function()
     vim.cmd("so")
 end)
+
+-- Unmap arrow keys
+local msg = [[<cmd>echohl Error | echo "KEY DISABLED" | echohl None<CR>]]
+
+-- Movement hard mode
+vim.api.nvim_set_keymap("i", "<Up>", "<C-o>" .. msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap("i", "<Down>", "<C-o>" .. msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap("i", "<Left>", "<C-o>" .. msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap("i", "<Right>", "<C-o>" .. msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap("n", "<Up>", msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap("n", "<Down>", msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap("n", "<Left>", msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap("n", "<Right>", msg, { noremap = true, silent = false })
+vim.api.nvim_set_keymap('n', '<C-/>', '<Cmd>s/^/-- /<CR>', { noremap = true, silent = true })
