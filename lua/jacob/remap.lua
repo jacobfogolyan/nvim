@@ -55,6 +55,11 @@ vim.keymap.set("n", "<leader><leader>", function()
     vim.cmd("so")
 end)
 
+-- Yank visually selected text to the system clipboard.
+vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
+-- Yank text to the end of the line to the system clipboard.
+vim.keymap.set("n", "<leader>Y", [["+Y]])
+
 -- Unmap arrow keys
 local msg = [[<cmd>echohl Error | echo "KEY DISABLED" | echohl None<CR>]]
 
