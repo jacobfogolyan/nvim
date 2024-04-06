@@ -48,6 +48,11 @@ vim.keymap.set(
     "oif err != nil {<CR>}<Esc>Oreturn err<Esc>"
 )
 
+-- Check keymap definition(s) for a given keymap.
+vim.keymap.set("n", "<leader>v", function ()
+    vim.cmd(":verbose map " .. vim.fn.input("find keymap: "))
+end)
+
 vim.keymap.set("n", "<leader>vpp", "<cmd>e ~/.dotfiles/nvim/.config/nvim/lua/jacob/packer.lua<CR>");
 vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
 
