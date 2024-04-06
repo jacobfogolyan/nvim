@@ -46,6 +46,7 @@ return {
 				"elixirls",
 				"tsserver",
 				"eslint",
+				"prettier",
 				"kotlin_language_server",
 				"yamlls",
 				"lua_ls",
@@ -100,6 +101,9 @@ return {
 			}
 		}
 
+		lspconfig.eslint.setup {
+			capabilities = capabilities,
+		}
 		-- Clang LSP
 		lspconfig.clangd.setup {
 			filetypes = {
