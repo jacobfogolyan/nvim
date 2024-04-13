@@ -25,7 +25,8 @@ return {
 				"lua",
 				"vue",
 				"javascript",
-				"tsx"
+				"tsx",
+				"prisma",
 			},
 
 			-- Install parsers synchronously (only applied to `ensure_installed`)
