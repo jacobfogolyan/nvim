@@ -46,7 +46,6 @@ return {
 				"elixirls",
 				"tsserver",
 				"eslint",
-				"prettier",
 				"kotlin_language_server",
 				"yamlls",
 				"lua_ls",
@@ -60,6 +59,7 @@ return {
 				"taplo",
 				"volar",
 				"vuels",
+				"prismals"
 			},
 
 			handlers = {
