@@ -12,15 +12,13 @@ return {
 		vim.keymap.set('n', '<leader>nf', '<cmd>Neotree focus<cr>');
 
 		require("neo-tree").setup({
-			opts = {
-				filesystem = {
-					filtered_items = {
-						visible = true,
-					}
+			filesystem = {
+				filtered_items = {
+					visible = true,
+					hide_dotfiles = false,
+					hide_gitignored = false,
 				}
 			},
-			hide_dotfiles = false,
-			hide_gitignored = false,
 			enable_git_status = true,
 			enable_diagnostics = true,
 			git_status = {
