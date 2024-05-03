@@ -84,3 +84,6 @@ vim.keymap.set("n", "<leader>t", function()
    vim.cmd("terminal")
    vim.cmd("startinsert")
 end)
+
+-- Buffer management
+vim.keymap.set("n", "<leader>q", ":bdelete<CR>")
