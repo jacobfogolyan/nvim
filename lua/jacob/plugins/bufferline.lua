@@ -11,8 +11,8 @@ return {
     },
     after = "catppuccin",
     keys = {
-        { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
-        { "<S-l>", "<cmd>BufferLineCycleNext<cr>", desc = "Next buffer" },
+        { "<C-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
+        { "<C-l>", "<cmd>BufferLineCycleNext<cr>", desc = "Next buffer" },
     },
     config = function ()
         require("bufferline").setup {
