@@ -10,3 +10,4 @@ Terminal Emulator Configuration: If <D-1> does not work, the issue might be with
 
 https://github.com/ryanoasis/nerd-fonts/releases/latest/download/CascadiaMono.zip
 
+### [rest-nvimk](https://github.com/rest-nvim/rest.nvim)
