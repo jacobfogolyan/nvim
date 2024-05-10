@@ -53,7 +53,7 @@ return {
 			group = Jacob_Formatter,
 			pattern = { "*.vue", "*.js", "*.jsx", "*.ts", "*.tsx", "*.py", "*.html", "*.css", "*.scss" },
 			callback = function()
-				vim.cmd("Format")
+				vim.cmd("FormatWrite")
 			end
 		})
 	end
