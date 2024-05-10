@@ -1,6 +1,6 @@
 ### Dependencies
 
-brew install ripgrep
+`brew install ripgrep`
 
 ### shortcut emulation, not working
 
@@ -11,3 +11,7 @@ Terminal Emulator Configuration: If <D-1> does not work, the issue might be with
 https://github.com/ryanoasis/nerd-fonts/releases/latest/download/CascadiaMono.zip
 
 ### [rest-nvimk](https://github.com/rest-nvim/rest.nvim)
+
+## Install Node Provider
+
+`npm install -g neovim`
