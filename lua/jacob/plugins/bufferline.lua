@@ -8,13 +8,12 @@ return {
 		"VeryLazy",
 	},
 	keys = {
-		{ "<C-h>",  "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
-		{ "<C-l>",  "<cmd>BufferLineCycleNext<cr>", desc = "Next buffer" },
-
+		{ "<C-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Prev buffer" },
+		{ "<C-l>", "<cmd>BufferLineCycleNext<cr>", desc = "Next buffer" },
 	},
 	config = function()
 		require("bufferline").setup {
-		
+
 		}
 	end
 }
