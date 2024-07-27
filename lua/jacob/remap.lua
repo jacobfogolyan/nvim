@@ -87,3 +87,5 @@ end)
 
 -- Buffer management
 vim.keymap.set("n", "<leader>q", ":bdelete<CR>")
+vim.keymap.set("n", "<leader>bd",":<C-U>bprevious <bar> bdelete #<CR>")
+	
