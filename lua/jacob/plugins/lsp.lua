@@ -17,6 +17,7 @@ return {
 	config = function()
 		local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
 		local lspconfig = require("lspconfig")
+
 		local capabilities = vim.tbl_deep_extend(
 			"force",
 			{},
@@ -27,7 +28,8 @@ return {
 		require("mason").setup {
 			max_concurrent_installers = 4,
 			ui = {
-				check_outdated_packages_on_open = true
+				check_outdated_packages_on_open = true,
+				border = "double"
 			}
 		}
 
@@ -72,7 +74,6 @@ return {
 			}
 		}
 
-
 		lspconfig.volar.setup {
 			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
 			init_options = {
@@ -81,6 +82,16 @@ return {
 				},
 			},
 		}
+
+		-- Customize hover window
+		vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+			vim.lsp.handlers.hover, {
+				border = "double",
+				max_width = 80, -- Adjust the maximum width according to your needs
+				max_height = 20, -- Adjust the maximum height according to your needs
+			}
+		)
+
 		-- Go LSP
 		lspconfig.gopls.setup {
 			settings = {
@@ -134,6 +145,7 @@ return {
 
 		-- Gdscript LSP
 		lspconfig.gdscript.setup {
+			capabilities = capabilities,
 			cmd = {
 				"ncat", "localhost", "6008",
 			}
