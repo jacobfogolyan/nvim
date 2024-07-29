@@ -38,7 +38,23 @@ return {
 
 		local function customFindFiles()
 			builtin.find_files({
+				-- TODO: revisit this
+				file_ignore_patterns = {
+					-- VCS source directories
+					".git/",
+					-- Go packages
+					"vendor/",
+					-- JS packages
+					"node_modules/",
+					-- Vim files
+					"*~",
+					"*.swp",
+					"*.swo",
+					".yarn/",
+				},
 				find_command = { 'rg', '--files', '--iglob', '!.git', '--hidden' },
+				-- find_command = { 'rg', '--files', '--hidden', '--glob', '**/.env', '--glob', '*' },
+
 				previewer = false,
 			})
 		end
@@ -51,11 +67,12 @@ return {
 
 		vim.keymap.set("n", "<leader>f", customFindFiles, {})
 		-- vim.keymap.set("n", "C-q", actions.smart_send_to_qflist + actions.open_qflist, {})
-		vim.keymap.set("n", "<leader>F", builtin.grep_string, {})
+		vim.keymap.set("n", "<leader>F", builtin.live_grep, {})
 		-- list buffers
 		vim.keymap.set("n", "<leader>b", builtin.buffers, {})
 		-- Registers
 		vim.keymap.set("n", "<leader>r", builtin.registers, {})
+		-- vim.keymap.set("q", "<leader>q", builtin.
 		vim.keymap.set("n", "<C-k>", "<C-p>")
 	end
 }
