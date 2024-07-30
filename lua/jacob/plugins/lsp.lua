@@ -10,7 +10,7 @@ return {
 		"williamboman/mason.nvim",
 		"williamboman/mason-lspconfig.nvim",
 		"hrsh7th/cmp-nvim-lsp",
-		"folke/neodev.nvim",
+		"folke/lazydev.nvim",
 		"j-hui/fidget.nvim",
 	},
 
@@ -33,7 +33,7 @@ return {
 			}
 		}
 
-		require("neodev").setup {
+		require("lazydev").setup {
 			lspconfig = true,
 		}
 
@@ -60,7 +60,7 @@ return {
 				"cssls",
 				"taplo",
 				"volar",
-				"prismals"
+				"prismals",
 			},
 
 			handlers = {
@@ -73,14 +73,8 @@ return {
 			}
 		}
 
-		lspconfig.volar.setup {
-			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-			init_options = {
-				vue = {
-					hybridMode = false,
-				}
-			}
-		}
+		lspconfig.volar.setup {}
+
 		local vue_typescript_plugin = require('mason-registry')
 			.get_package('vue-language-server')
 			:get_install_path()
@@ -91,11 +85,19 @@ return {
 			init_options = {
 				plugins = {
 					{
-						name = '@vue/typescript-plugin',
+						--revisit
+						name = "@vue/typescript-plugin",
 						location = vue_typescript_plugin,
-						languages = { 'vue' },
-					},
+						languages = { "javascript", "typescript", "vue" },
+					}
 				}
+			},
+			filetypes = {
+				"javascript",
+				"typescript",
+				"vue",
+				"javascriptreact",
+				"typescriptreact"
 			}
 		}
 		-- Customize hover window
