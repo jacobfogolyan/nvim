@@ -6,31 +6,34 @@ return {
 	config = function()
 		local trouble = require("trouble")
 		trouble.setup {
-			icons = true,
-			position = "bottom",
-			mode = "workspace_diagnostics",
-			-- Group results on a per-file basis.
-			group = true,
-			cycle_results = true,
-			-- Show all severity levels
-			severity = nil,
-			padding = true,
-			-- Automatically open list when diagnostics are detected
-			auto_open = true,
-			-- Automatically close list when no diagnostics are detected
-			auto_close = false,
-			-- Mappings for keymaps in the diagnostics window
-			action_keys = {
-				close = "q",
-				refresh = "r",
-				switch_severity = "s",
-				preview = "p",
-				previous = "k",
-				next = "j",
-				-- Opens a small popup with the full diagnostic message
-				hover = "K",
+			modes = {
+				diagnostics = {
+					-- Automatically open list when diagnostics are detected
+					auto_open = true,
+					-- Automatically close list when no diagnostics are detected
+					auto_close = true,
+					position = "bottom",
+					mode = "workspace_diagnostics",
+					-- Group results on a per-file basis.
+					group = true,
+					cycle_results = true,
+					-- Show all severity levels
+					severity = nil,
+					padding = true,
+					-- Mappings for keymaps in the diagnostics window
+					action_keys = {
+						close = "q",
+						refresh = "r",
+						switch_severity = "s",
+						preview = "p",
+						previous = "k",
+						next = "j",
+						-- Opens a small popup with the full diagnostic message
+						hover = "K",
+					},
+					multiline = true,
+				},
 			},
-			multiline = true,
 		}
 
 		vim.keymap.set("n", "<leader>xx", function() trouble.toggle() end)

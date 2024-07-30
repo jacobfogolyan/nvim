@@ -1,26 +1,27 @@
 return {
 	"nvim-telescope/telescope.nvim",
-	tag = '0.1.6',
+	tag = '0.1.8',
 	dependencies = {
+		"nvim-telescope/telescope-ui-select.nvim",
 		"nvim-tree/nvim-web-devicons",
+		"nvim-lua/plenary.nvim",
+		"folke/trouble.nvim",
 	},
 	config = function()
 		local telescope = require("telescope")
-		local builtin = require("telescope.builtin")
 		local actions = require("telescope.actions")
-		local trouble = require("trouble.providers.telescope")
+		local builtin = require("telescope.builtin")
+		local open_with_trouble = require("trouble.sources.telescope").open
 
 		telescope.setup {
-			-- extra setup options, integrate with other plugins etc
-			--
 			defaults = {
 				mappings = {
 					i = {
-						["<C-t>"] = trouble.open_with_trouble,
+						["<C-t>"] = open_with_trouble,
 					},
 					n = {
 						["<C-q"] = actions.smart_send_to_qflist + actions.open_qflist,
-						["<C-t>"] = trouble.open_with_trouble,
+						["<C-t>"] = open_with_trouble,
 						["q"] = actions.close,
 					},
 				},
@@ -35,6 +36,12 @@ return {
 				}
 			},
 		}
+
+
+		-- Load UI selection extension
+		-- This extension allows neovim to use telescope based UI menus for rendering internal windows (i.e. lsp.buf
+		-- when autocompleting LSP code actions).
+		telescope.load_extension("ui-select")
 
 		local function customFindFiles()
 			builtin.find_files({
