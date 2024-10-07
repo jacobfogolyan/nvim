@@ -20,7 +20,7 @@ return {
 						["<C-t>"] = open_with_trouble,
 					},
 					n = {
-						["<C-q"] = actions.smart_send_to_qflist + actions.open_qflist,
+						["<C-q>"] = actions.smart_send_to_qflist + actions.open_qflist,
 						["<C-t>"] = open_with_trouble,
 						["q"] = actions.close,
 					},
@@ -35,6 +35,12 @@ return {
 					width = 0.9,
 				}
 			},
+			pickers = {
+				find_files = {
+					-- Telescope theme
+					-- theme = "dropdown"
+				}
+			}
 		}
 
 
@@ -42,6 +48,7 @@ return {
 		-- This extension allows neovim to use telescope based UI menus for rendering internal windows (i.e. lsp.buf
 		-- when autocompleting LSP code actions).
 		telescope.load_extension("ui-select")
+
 
 		local function customFindFiles()
 			builtin.find_files({
@@ -59,10 +66,12 @@ return {
 					"*.swo",
 					".yarn/",
 				},
-				find_command = { 'rg', '--files', '--iglob', '!.git', '--hidden' },
+				find_command = { 'rg', '--files', '--no-ignore', '--hidden' },
+				-- find_command = { 'rg', '--files', '--iglob', '!.git', '--hidden' },
 				-- find_command = { 'rg', '--files', '--hidden', '--glob', '**/.env', '--glob', '*' },
 
-				previewer = false,
+				previewer = true,
+				prompt_prefix = " "
 			})
 		end
 
