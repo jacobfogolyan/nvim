@@ -1,7 +1,7 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
 	build = ":TSUpdate",
-	config = function()
+	config = function(config)
 		---@diagnostic disable-next-line: missing-fields
 		require("nvim-treesitter.configs").setup({
 			-- A list of parser names, or "all" (the five listed parsers should always be installed)
@@ -11,6 +11,7 @@ return {
 				"comment",
 				"typescript",
 				"make",
+				"cpp",
 				"dockerfile",
 				"vim",
 				"vimdoc",
@@ -27,6 +28,7 @@ return {
 				"javascript",
 				"tsx",
 				"prisma",
+				"graphql"
 			},
 
 			-- Install parsers synchronously (only applied to `ensure_installed`)
@@ -46,5 +48,9 @@ return {
 				additional_vim_regex_highlighting = false,
 			},
 		})
+		-- Custom filetype detection for Dockerfile-*
+		vim.cmd([[
+		  autocmd BufNewFile,BufRead Dockerfile-* setfiletype dockerfile
+		]])
 	end
 }

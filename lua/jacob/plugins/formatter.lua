@@ -26,13 +26,32 @@ return {
 				vue = { format_prettier },
 				css = { format_prettier },
 				scss = { format_prettier },
-				yml = { format_prettier },
+				yaml = {
+					function()
+						return {
+							exe = "npx",
+							args = { "prettier", "--parser", "yaml", "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+							stdin = true
+						}
+					end
+				},
+				mjs = { format_prettier },
 				lua = {
 					-- luafmt
 					function()
 						return {
-							exe = "luafmt",
-							args = { "--indent-count", 2, "--stdin" },
+        				    exe = "stylua",
+        				    args = { "-" }, -- Stylua reads from stdin
+        				    stdin = true
+        				}
+					end
+				},
+				cpp = {
+					-- clang-format
+					function()
+						return {
+							exe = "clang-format",
+							args = { "--assume-filename", vim.api.nvim_buf_get_name(0) },
 							stdin = true
 						}
 					end
@@ -51,10 +70,12 @@ return {
 
 		autocmd("BufWritePost", {
 			group = Jacob_Formatter,
-			pattern = { "*.vue", "*.js", "*.jsx", "*.ts", "*.tsx", "*.py", "*.html", "*.css", "*.scss" },
+			pattern = { "*.vue", "*.js", "*.jsx", "*.ts", "*.tsx", "*.py", "*.html", "*.css", "*.scss", "*.mjs", "*.yml", "*.json", "*.cpp" },
 			callback = function()
 				vim.cmd("FormatWrite")
 			end
 		})
+
+		vim.api.nvim_create_user_command('W', 'noautocmd w', {})
 	end
 }

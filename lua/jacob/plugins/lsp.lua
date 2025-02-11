@@ -35,6 +35,14 @@ return {
 
 		require("lazydev").setup {
 			lspconfig = true,
+			enabled = true,
+			runtime = vim.env.VIMRUNTIME --[[@as string]],
+			library = {}, ---@type lazydev.Library.spec[]
+			integrations = {
+				lspconfig = true,
+				cmp = true
+			},
+			debug = false
 		}
 
 		require("mason-lspconfig").setup {
@@ -46,7 +54,7 @@ return {
 				"rust_analyzer",
 				"clangd",
 				"elixirls",
-				"tsserver",
+				"ts_ls",
 				"eslint",
 				"kotlin_language_server",
 				"yamlls",
@@ -61,6 +69,7 @@ return {
 				"taplo",
 				"volar",
 				"prismals",
+				"arduino_language_server",
 			},
 
 			handlers = {
@@ -81,7 +90,7 @@ return {
 			.. '/node_modules/@vue/language-server'
 			.. '/node_modules/@vue/typescript-plugin'
 
-		lspconfig.tsserver.setup {
+		lspconfig.ts_ls.setup {
 			init_options = {
 				plugins = {
 					{
@@ -98,7 +107,7 @@ return {
 				"vue",
 				"javascriptreact",
 				"typescriptreact"
-			}
+			},
 		}
 		-- Customize hover window
 		vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
@@ -129,14 +138,56 @@ return {
 			}
 		}
 
+		-- start_path will be the buffers current path
+		--		local function find_closest_eslint_config_dir()
+		--			local root_files = {
+		--				'.eslintrc',
+		--				'.eslintrc.js',
+		--				'.eslintrc.cjs',
+		--				'.eslintrc.yaml',
+		--				'.eslintrc.yml',
+		--				'.eslintrc.json',
+		--				'eslint.config.js',
+		--				'eslint.config.mjs',
+		--				'eslint.config.cjs',
+		--				'eslint.config.ts',
+		--				'eslint.config.mts',
+		--				'eslint.config.cts',
+		--			}
+		--
+		--			local search_path = vim.api.nvim_buf_get_name(0);
+		--			while search_path do
+		--				local has_package_json = util.path.exists(util.path.join(search_path, 'package.json'))
+		--				local has_eslint_config = false
+		--
+		--				for _, root_file in ipairs(root_files) do
+		--					if util.path.exists(util.path.join(search_path, root_file)) then
+		--						has_eslint_config = true
+		--						break
+		--					end
+		--				end
+		--
+		--				if has_package_json and has_eslint_config then
+		--					return search_path
+		--				end
+		--
+		--				search_path = util.path.dirname(search_path)
+		--				if search_path == util.path.dirname(search_path) then
+		--					return nil
+		--				end
+		--			end
+		--		end
+		--
+		--		local custom_root_dir = function(fname)
+		--			return find_closest_eslint_config_dir() or util.find_git_ancestor(fname)
+		--		end
+
 		lspconfig.eslint.setup {
 			capabilities = capabilities,
-		}
-		-- Clang LSP
-		lspconfig.clangd.setup {
-			filetypes = {
-				"c", "cpp", "proto",
-			},
+			-- 			root_dir = custom_root_dir,
+			-- 			settings = {
+			-- 				workingDirectory = { mode = 'location' }
+			-- 			}
 		}
 
 		-- Lua LSP
@@ -168,6 +219,31 @@ return {
 			}
 		}
 
+		lspconfig.clangd.setup {
+			capabilities = capabilities,
+			filetypes = {
+				"c", "cpp", "proto",
+			},
+		}
+
+		lspconfig.arduino_language_server.setup {
+			cmd = {
+				"arduino-language-server",
+				"-clangd", "/usr/bin/clangd",
+				"-cli", "/opt/homebrew/bin/arduino-cli",
+				"-cli-config", "/Users/jacob/Library/Arduino15/arduino-cli.yaml",
+				"-fqbn", "arduino:esp32:nano_nora"
+			},
+			filetypes = { "cpp", "arduino" }, -- Filetypes to attach to
+			root_dir = lspconfig.util.root_pattern("*.ino", "*.cpp", ".git"),
+		}
+
+		local function vSplitAndExecute(callback)
+			vim.cmd("vsplit")
+			vim.cmd("wincmd l")
+			if callback then callback() end
+		end
+
 		-- LSP keymap shortcuts
 		-- Only remap keys after language server has attached to current buffer
 		vim.api.nvim_create_autocmd("LspAttach", {
@@ -176,12 +252,13 @@ return {
 				local opts = { buffer = event.buf }
 
 				vim.keymap.set("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", opts)
-				vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<cr>", opts)
-				vim.keymap.set("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<cr>", opts)
-				vim.keymap.set("n", "gi", "<cmd>lua vim.lsp.buf.implementation()<cr>", opts)
-				vim.keymap.set("n", "go", "<cmd>lua vim.lsp.buf.type_definition()<cr>", opts)
-				vim.keymap.set("n", "gr", "<cmd>lua vim.lsp.buf.references()<cr>", opts)
-				vim.keymap.set("n", "gs", "<cmd>lua vim.lsp.buf.signature_help()<cr>", opts)
+				-- vim.keymap.set("n", "gd", "<cmd>lua vim.lsp.buf.definition()<cr>", opts)
+				vim.keymap.set("n", "gd", function() vSplitAndExecute(vim.lsp.buf.definition) end, opts)
+				vim.keymap.set("n", "gD", function() vSplitAndExecute(vim.lsp.buf.declaration) end, opts)
+				vim.keymap.set("n", "gi", function() vSplitAndExecute(vim.lsp.buf.implementation) end, opts)
+				vim.keymap.set("n", "go", function() vSplitAndExecute(vim.lsp.buf.type_definition) end, opts)
+				vim.keymap.set("n", "gr", function() vSplitAndExecute(vim.lsp.buf.references) end, opts)
+				vim.keymap.set("n", "gs", function() vSplitAndExecute(vim.lsp.buf.signature_help) end, opts)
 				vim.keymap.set("n", "<F2>", "<cmd>lua vim.lsp.buf.rename()<cr>", opts)
 				vim.keymap.set({ "n", "x" }, "fb", "<cmd>lua vim.lsp.buf.format({async = true})<cr>", opts)
 

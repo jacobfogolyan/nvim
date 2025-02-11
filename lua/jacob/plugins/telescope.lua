@@ -55,18 +55,20 @@ return {
 				-- TODO: revisit this
 				file_ignore_patterns = {
 					-- VCS source directories
-					".git/",
+					".git",
 					-- Go packages
 					"vendor/",
 					-- JS packages
-					"node_modules/",
+					"node_modules/*",
 					-- Vim files
 					"*~",
 					"*.swp",
 					"*.swo",
 					".yarn/",
 				},
-				find_command = { 'rg', '--files', '--no-ignore', '--hidden' },
+				--				find_command = { 'rg', '--files', '--no-ignore', '--hidden' },
+				find_command = { 'rg', '--files', '--hidden', '--glob', '!.git/', '--glob', '!node_modules/*', '--glob', '!.yarn/*' },
+				-- find_command = { 'rg', '--files', '--hidden', '--glob', '!.git/', '--glob', '!node_modules/*', '--glob', '!.yarn/*' },
 				-- find_command = { 'rg', '--files', '--iglob', '!.git', '--hidden' },
 				-- find_command = { 'rg', '--files', '--hidden', '--glob', '**/.env', '--glob', '*' },
 
@@ -74,6 +76,32 @@ return {
 				prompt_prefix = " "
 			})
 		end
+
+		local function customLiveGrep()
+			builtin.live_grep({
+				-- TODO: revisit this
+				file_ignore_patterns = {
+					-- VCS source directories
+					".git/",
+					-- Go packages
+					"vendor/",
+					-- JS packages
+					"node_modules/*",
+					-- Vim files
+					"*~",
+					"*.swp",
+					"*.swo",
+					".yarn/",
+				},
+				find_command = { 'rg', '--files', '--hidden' },
+				-- find_command = { 'rg', '--files', '--iglob', '!.git', '--hidden' },
+				-- find_command = { 'rg', '--files', '--hidden', '--glob', '**/.env', '--glob', '*' },
+
+				previewer = true,
+				prompt_prefix = " "
+			})
+		end
+
 
 		-- Open telescope to neovim configuration directory.
 		-- Autocmd must start with upper case letter.
@@ -83,7 +111,7 @@ return {
 
 		vim.keymap.set("n", "<leader>f", customFindFiles, {})
 		-- vim.keymap.set("n", "C-q", actions.smart_send_to_qflist + actions.open_qflist, {})
-		vim.keymap.set("n", "<leader>F", builtin.live_grep, {})
+		vim.keymap.set("n", "<leader>F", customLiveGrep, {})
 		-- list buffers
 		vim.keymap.set("n", "<leader>b", builtin.buffers, {})
 		-- Registers

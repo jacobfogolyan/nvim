@@ -10,6 +10,7 @@ return {
 
 	config = function()
 		local status = require("lazy.status")
+
 		require("lualine").setup {
 			icons_enabled = true,
 			theme = "auto",
@@ -36,8 +37,7 @@ return {
 				lualine_c = {
 					{
 						"filename",
-						-- Filename and parent dir, with tilde as the home directory
-						path = 4,
+						path = 1
 					},
 				},
 				lualine_x = {

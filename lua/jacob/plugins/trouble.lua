@@ -19,7 +19,7 @@ return {
 					cycle_results = true,
 					-- Show all severity levels
 					severity = nil,
-					padding = true,
+					padding = 0,
 					-- Mappings for keymaps in the diagnostics window
 					action_keys = {
 						close = "q",
@@ -41,5 +41,18 @@ return {
 		vim.keymap.set("n", "<leader>xd", function() trouble.toggle("document_diagnostics") end)
 		vim.keymap.set("n", "<leader>xl", function() trouble.toggle("loclist") end)
 		vim.keymap.set("n", "<leader>xq", function() trouble.toggle("quickfix") end)
+
+--		local Jacob_Trouble = vim.api.nvim_create_augroup("Jacob_Trouble", {})
+--		local autocmd = vim.api.nvim_create_autocmd
+--
+--		autocmd("BufDelete", {
+--			group = Jacob_Trouble,
+--			callback = function ()
+--				local listed_buffers = vim.fn.getbufinfo({buflisted = 1})
+--				if #listed_buffers == 1 and listed_buffers[1].name == 'NvimTree_1' then
+--					vim.cmd('TroubleClose')
+--				end
+--			end
+--		})
 	end
 }

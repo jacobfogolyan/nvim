@@ -47,8 +47,10 @@ local config = {
 	undofile = true,
 	-- Always show tabs
 	showtabline = 2,
-	-- Dont line wrap long lines
-	wrap = false,
+	-- wrap long lines
+	wrap = true,
+	-- Break lines at word boundaries
+	linebreak = true,
 }
 
 for k, v in pairs(config) do
@@ -56,7 +58,7 @@ for k, v in pairs(config) do
 end
 
 -- Hide intro screen
-vim.opt.shortmess:append "I"
+vim.opt.shortmess:append("I")
 
 vim.opt.laststatus = 2
 vim.opt.showmode = true

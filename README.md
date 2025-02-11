@@ -15,3 +15,7 @@ https://github.com/ryanoasis/nerd-fonts/releases/latest/download/CascadiaMono.zi
 ## Install Node Provider
 
 `npm install -g neovim`
+
+## Install Deno
+
+`curl -fsSL https://deno.land/install.sh | sh`

@@ -10,11 +10,17 @@ return {
 		-- Luasnip snippets
 		"L3MON4D3/LuaSnip",
 		"saadparwaiz1/cmp_luasnip",
+		"p00f/clangd_extensions.nvim",
+		"aznhe21/actions-preview.nvim"
 		-- Snippy snippets
 		-- "dcampos/nvim-snippy",
 		-- "dcampos/cmp-snippy",
 	},
-
+	opts = function(_, opts)
+		opts.sorting = opts.sorting or {}
+		opts.sorting.comparators = opts.sorting.comparators or {}
+		table.insert(opts.sorting.comparators, 1, require("clangd_extensions.cmp_scores"))
+	end,
 	config = function()
 		-- Ghost text highlighting
 		vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
@@ -26,6 +32,29 @@ return {
 			local line, col = unpack(vim.api.nvim_win_get_cursor(0))
 			return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
 		end
+
+		 local preview = require("actions-preview")
+        preview.setup {
+            diff = {
+                algorithm = "patience",
+                ignore_whitespace = true,
+                ctxlen = 3,
+            },
+            highlight_command = {
+                require("actions-preview.highlight").diff_so_fancy(),
+            },
+            telescope = vim.tbl_extend(
+                "force",
+                require("telescope.themes").get_dropdown(),
+                {
+                    make_value = nil,
+                    make_make_display = nil,
+                }
+            ),
+        }
+
+        -- Code actions popup menu
+        vim.keymap.set({"v", "n"}, "<leader>a", preview.code_actions)
 
 		cmp.setup {
 			-- Skip automatically selecting the first item
@@ -66,7 +95,7 @@ return {
 			}),
 
 			sources = cmp.config.sources({
-				{ name = "copilot", group_index = 2 },
+				{ name = "copilot",                group_index = 2 },
 				{ name = "nvim_lsp" },
 				-- { name = "snippy" }, -- Snippy snippet source
 				{ name = "luasnip" }, -- Luasnip snippet source
