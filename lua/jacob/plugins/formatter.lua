@@ -1,7 +1,6 @@
 return {
 	"mhartington/formatter.nvim",
 	config = function()
-		-- Utilities for creating configurations
 		local function format_prettier()
 			return {
 				exe = "npx",
@@ -10,6 +9,32 @@ return {
 			}
 		end
 
+		local function format_eslint()
+			return {
+				exe = "npx",
+				args = { "eslint", "--fix", vim.api.nvim_buf_get_name(0) },
+				stdin = false
+			}
+		end
+
+		-- Path-based formatter selection
+		local function get_formatter()
+			local file_path = vim.fn.expand("%:p")
+
+			-- Define your parent folders
+			local prettier_parent = "/Users/jacob/Development/vsf/clients"
+			local eslint_parent = "/Users/jacob/Development/personal"
+
+			-- Check which parent folder contains this file
+			if string.match(file_path, prettier_parent) then
+				return format_prettier()
+			elseif string.match(file_path, eslint_parent) then
+				return format_eslint()
+			else
+				-- Default formatter for files outside these folders
+				return format_prettier() -- or whatever default you prefer
+			end
+		end
 		-- Provides the Format, FormatWrite, FormatLock, and FormatWriteLock commands
 		require("formatter").setup {
 			-- Enable or disable logging
@@ -18,14 +43,14 @@ return {
 			log_level = vim.log.levels.WARN,
 			-- All formatter configurations are opt-in
 			filetype = {
-				typescriptreact = { format_prettier },
-				typescript = { format_prettier },
-				javascript = { format_prettier },
-				javascriptreact = { format_prettier },
-				json = { format_prettier },
-				vue = { format_prettier },
-				css = { format_prettier },
-				scss = { format_prettier },
+				typescriptreact = { get_formatter },
+				typescript = { get_formatter },
+				javascript = { get_formatter },
+				javascriptreact = { get_formatter },
+				json = { get_formatter },
+				vue = { get_formatter },
+				css = { get_formatter },
+				scss = { get_formatter },
 				yaml = {
 					function()
 						return {
@@ -35,15 +60,15 @@ return {
 						}
 					end
 				},
-				mjs = { format_prettier },
+				mjs = { get_formatter },
 				lua = {
 					-- luafmt
 					function()
 						return {
-        				    exe = "stylua",
-        				    args = { "-" }, -- Stylua reads from stdin
-        				    stdin = true
-        				}
+							exe = "stylua",
+							args = { "-" }, -- Stylua reads from stdin
+							stdin = true
+						}
 					end
 				},
 				cpp = {
