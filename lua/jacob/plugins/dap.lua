@@ -1,19 +1,10 @@
-_G.get_args = function()
-  -- 获取输入命令行参数
-  local cmd_args = vim.fn.input('CommandLine Args:')
-  local params = {}
-  -- 定义分隔符(%s在lua内表示任何空白符号)
-  local sep = "%s"
-  for param in string.gmatch(cmd_args, "[^%s]+") do
-    table.insert(params, param)
-  end
-  return params
-end
+-- This is a complete nvim-dap setup for JavaScript/TypeScript, Lua, and C++
+-- Add this to your LazyVim configuration
 
 return {
 	"mfussenegger/nvim-dap",
 	recommended = true,
-	desc = "Debugging support. Requires language specific adapters to be configured. (see lang extras)",
+	desc = "Debugging support for JavaScript/TypeScript, Lua, and C++",
 
 	dependencies = {
 		"rcarriga/nvim-dap-ui",
@@ -21,14 +12,12 @@ return {
 			"williamboman/mason.nvim",
 			opts = function(_, opts)
 				opts.ensure_installed = opts.ensure_installed or {}
+				-- Add the debug adapters we need
 				table.insert(opts.ensure_installed, "js-debug-adapter")
+				table.insert(opts.ensure_installed, "codelldb")
 			end,
 		},
 		-- virtual text for the debugger
-		{
-			"theHamsta/nvim-dap-virtual-text",
-			opts = {},
-		},
 		{
 			"theHamsta/nvim-dap-virtual-text",
 			opts = {},
@@ -74,11 +63,32 @@ return {
 				-- You'll need to check that you have the required things installed
 				-- online, please don't ask me how to install them :)
 				ensure_installed = {
-					-- Update this to ensure that you have the debuggers for the langs you want
+					-- Updated to ensure debuggers for JS/TS, Lua, and C++
+					"js-debug-adapter",
+					"codelldb",
 				},
 			},
-			-- mason-nvim-dap is loaded when nvim-dap loads
-			config = function() end,
+		},
+		-- Add one-small-step for Lua debugging
+		{
+			"jbyuki/one-small-step-for-vimkind",
+			config = function()
+				local dap = require("dap")
+				dap.configurations.lua = {
+					{
+						type = "nlua",
+						request = "attach",
+						name = "Attach to running Neovim instance",
+						host = "127.0.0.1",
+						port = 8086,
+					}
+				}
+				dap.adapters.nlua = function(callback, config)
+					local config_params = config or {}
+					callback({ type = "server", host = config_params.host or "127.0.0.1", port = config_params.port or
+					8086 })
+				end
+			end
 		}
 	},
 
@@ -86,6 +96,19 @@ return {
 		local dap = require("dap")
 		local LazyVim = require("lazyvim")
 
+		-- Define get_args globally to fix the reference
+		_G.get_args = function()
+			-- Get input command line arguments
+			local cmd_args = vim.fn.input('CommandLine Args:')
+			local params = {}
+			-- Parse by whitespace
+			for param in string.gmatch(cmd_args, "[^%s]+") do
+				table.insert(params, param)
+			end
+			return params
+		end
+
+		-- JavaScript/TypeScript adapter setup
 		if not dap.adapters["pwa-node"] then
 			require("dap").adapters["pwa-node"] = {
 				type = "server",
@@ -93,7 +116,7 @@ return {
 				port = "${port}",
 				executable = {
 					command = "node",
-					-- 💀 Make sure to update this path to point to your installation
+					-- Make sure to update this path to point to your installation
 					args = {
 						LazyVim.get_pkg_path("js-debug-adapter", "/js-debug/src/dapDebugServer.js"),
 						"${port}",
@@ -121,6 +144,7 @@ return {
 		vscode.type_to_filetypes["node"] = js_filetypes
 		vscode.type_to_filetypes["pwa-node"] = js_filetypes
 
+		-- JavaScript/TypeScript configurations
 		for _, language in ipairs(js_filetypes) do
 			if not dap.configurations[language] then
 				dap.configurations[language] = {
@@ -141,6 +165,53 @@ return {
 				}
 			end
 		end
+
+		-- C++ adapter setup with codelldb
+		if not dap.adapters.codelldb then
+			dap.adapters.codelldb = {
+				type = "server",
+				port = "${port}",
+				executable = {
+					command = vim.fn.exepath("codelldb"),
+					args = { "--port", "${port}" },
+				}
+			}
+		end
+
+		-- C++ configurations
+		if not dap.configurations.cpp then
+			dap.configurations.cpp = {
+				{
+					name = "Launch",
+					type = "codelldb",
+					request = "launch",
+					program = function()
+						return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+					end,
+					cwd = '${workspaceFolder}',
+					stopOnEntry = false,
+					args = function()
+						local args_string = vim.fn.input('Arguments: ')
+						local args = {}
+						for arg in args_string:gmatch("%S+") do
+							table.insert(args, arg)
+						end
+						return args
+					end,
+					runInTerminal = false,
+					console = "integratedTerminal",
+				},
+				{
+					name = "Attach to process",
+					type = "codelldb",
+					request = "attach",
+					processId = require("dap.utils").pick_process,
+					cwd = '${workspaceFolder}',
+				},
+			}
+			dap.configurations.c = dap.configurations.cpp
+			dap.configurations.rust = dap.configurations.cpp
+		end
 	end,
 	-- stylua: ignore
 	keys = {
@@ -148,7 +219,7 @@ return {
 		{ "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "Breakpoint Condition" },
 		{ "<leader>db", function() require("dap").toggle_breakpoint() end,                                    desc = "Toggle Breakpoint" },
 		{ "<leader>dc", function() require("dap").continue() end,                                             desc = "Continue" },
-		{ "<leader>da", function() require("dap").continue({ before = get_args }) end,                        desc = "Run with Args" },
+		{ "<leader>da", function() require("dap").continue({ before = _G.get_args }) end,                     desc = "Run with Args" },
 		{ "<leader>dC", function() require("dap").run_to_cursor() end,                                        desc = "Run to Cursor" },
 		{ "<leader>dg", function() require("dap").goto_() end,                                                desc = "Go to Line (No Execute)" },
 		{ "<leader>di", function() require("dap").step_into() end,                                            desc = "Step Into" },
@@ -184,8 +255,11 @@ return {
 		-- setup dap config by VsCode launch.json file
 		local vscode = require("dap.ext.vscode")
 		-- Extends dap.configurations with entries read from .vscode/launch.json
-		if vim.fn.filereadable(".vscode/launch.json") then
+		if vim.fn.filereadable(".vscode/launch.json") == 1 then
 			vscode.load_launchjs()
 		end
+
+		-- Set up logging for debugging DAP itself (useful when troubleshooting)
+		require('dap').set_log_level('INFO')
 	end,
 }

@@ -2,6 +2,8 @@ return {
 	"neovim/nvim-lspconfig",
 
 	event = {
+		"BufReadPre",
+		"BufNewFile",
 		"InsertEnter",
 		"CmdlineEnter",
 	},
@@ -31,6 +33,19 @@ return {
 				check_outdated_packages_on_open = true,
 				border = "double"
 			}
+		} -- Setup fidget for LSP progress information
+
+		require("fidget").setup {
+			progress = {
+				display = {
+					done_ttl = 3,
+				},
+			},
+			notification = {
+				window = {
+					winblend = 0,
+				},
+			},
 		}
 
 		require("lazydev").setup {
@@ -82,41 +97,54 @@ return {
 			}
 		}
 
-		lspconfig.volar.setup {}
-
-		local vue_typescript_plugin = require('mason-registry')
-			.get_package('vue-language-server')
-			:get_install_path()
-			.. '/node_modules/@vue/language-server'
-			.. '/node_modules/@vue/typescript-plugin'
+		lspconfig.volar.setup {
+			capabilities = capabilities,
+			filetypes = { 'vue', 'typescript', 'javascript' },
+			-- Only activate in Nuxt projects
+			root_dir = lspconfig.util.root_pattern('nuxt.config.ts', 'nuxt.config.js'),
+			init_options = {
+				typescript = {
+					tsdk = '/Users/jacob/.local/share/nvim/mason/packages/typescript-language-server/node_modules/typescript/lib'
+				},
+				vue = {
+					hybridMode = false, -- Disable hybrid mode to let Volar handle TS
+				},
+				languageFeatures = {
+					implementation = true,
+					references = true,
+					definition = true,
+					typeDefinition = true,
+					callHierarchy = true,
+					hover = true,
+					rename = true,
+					signatureHelp = true,
+					codeAction = true,
+					workspaceSymbol = true,
+					diagnostics = true,
+					-- Nuxt-specific completion features
+					completion = {
+						defaultTagNameCase = 'both',
+						defaultAttrNameCase = 'kebabCase',
+						autoImport = true,
+						-- Support Nuxt components auto-import
+						path = true
+					},
+				}
+			}
+		}
 
 		lspconfig.ts_ls.setup {
-			init_options = {
-				plugins = {
-					{
-						--revisit
-						name = "@vue/typescript-plugin",
-						location = vue_typescript_plugin,
-						languages = { "javascript", "typescript", "vue" },
-					}
-				}
-			},
-			filetypes = {
-				"javascript",
-				"typescript",
-				"vue",
-				"javascriptreact",
-				"typescriptreact"
-			},
+			capabilities = capabilities,
+			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact' },
+			-- Exclude Vue files completely from ts_ls
+			root_dir = function(fname)
+				if string.match(fname, '%.vue$') then
+					return nil
+				end
+				return lspconfig.util.root_pattern('nuxt.config.ts', 'nuxt.config.js', 'package.json', 'tsconfig.json',
+					'jsconfig.json', '.git')(fname)
+			end
 		}
-		-- Customize hover window
-		vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-			vim.lsp.handlers.hover, {
-				border = "double",
-				max_width = 80, -- Adjust the maximum width according to your needs
-				max_height = 20, -- Adjust the maximum height according to your needs
-			}
-		)
 
 		-- Go LSP
 		lspconfig.gopls.setup {
@@ -138,58 +166,48 @@ return {
 			}
 		}
 
-		-- start_path will be the buffers current path
-		--		local function find_closest_eslint_config_dir()
-		--			local root_files = {
-		--				'.eslintrc',
-		--				'.eslintrc.js',
-		--				'.eslintrc.cjs',
-		--				'.eslintrc.yaml',
-		--				'.eslintrc.yml',
-		--				'.eslintrc.json',
-		--				'eslint.config.js',
-		--				'eslint.config.mjs',
-		--				'eslint.config.cjs',
-		--				'eslint.config.ts',
-		--				'eslint.config.mts',
-		--				'eslint.config.cts',
-		--			}
-		--
-		--			local search_path = vim.api.nvim_buf_get_name(0);
-		--			while search_path do
-		--				local has_package_json = util.path.exists(util.path.join(search_path, 'package.json'))
-		--				local has_eslint_config = false
-		--
-		--				for _, root_file in ipairs(root_files) do
-		--					if util.path.exists(util.path.join(search_path, root_file)) then
-		--						has_eslint_config = true
-		--						break
-		--					end
-		--				end
-		--
-		--				if has_package_json and has_eslint_config then
-		--					return search_path
-		--				end
-		--
-		--				search_path = util.path.dirname(search_path)
-		--				if search_path == util.path.dirname(search_path) then
-		--					return nil
-		--				end
-		--			end
-		--		end
-		--
-		--		local custom_root_dir = function(fname)
-		--			return find_closest_eslint_config_dir() or util.find_git_ancestor(fname)
-		--		end
-
 		lspconfig.eslint.setup {
 			capabilities = capabilities,
-			-- 			root_dir = custom_root_dir,
-			-- 			settings = {
-			-- 				workingDirectory = { mode = 'location' }
-			-- 			}
+			version = "*",
+			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+			root_dir = lspconfig.util.root_pattern(
+				'.eslintrc',
+				'.eslintrc.js',
+				'.eslintrc.json',
+				'.eslintrc.yaml',
+				'.eslintrc.yml',
+				'eslintrc.config.js',
+				'eslint.config.mjs'
+			),
+			settings = {
+				workingDirectory = { mode = 'location' },
+				codeAction = {
+					disableRuleComment = {
+						enable = true,
+						location = "separateLine"
+					},
+					showDocumentation = {
+						enable = true
+					}
+				},
+				experimental = {
+					useFlatConfig = true
+				},
+				format = { enable = true },
+				-- Add this to improve handling of SVG content
+				html = {
+					-- This tells ESLint to not try to validate HTML/SVG content
+					validate = false
+				},
+				run = "onSave",
+			},
+			on_attach = function(client, bufnr)
+				vim.api.nvim_create_autocmd("BufWritePre", {
+					buffer = bufnr,
+					command = "EslintFixAll",
+				})
+			end
 		}
-
 		-- Lua LSP
 		lspconfig.lua_ls.setup {
 			settings = {
