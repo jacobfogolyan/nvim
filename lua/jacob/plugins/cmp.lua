@@ -33,28 +33,28 @@ return {
 			return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
 		end
 
-		 local preview = require("actions-preview")
-        preview.setup {
-            diff = {
-                algorithm = "patience",
-                ignore_whitespace = true,
-                ctxlen = 3,
-            },
-            highlight_command = {
-                require("actions-preview.highlight").diff_so_fancy(),
-            },
-            telescope = vim.tbl_extend(
-                "force",
-                require("telescope.themes").get_dropdown(),
-                {
-                    make_value = nil,
-                    make_make_display = nil,
-                }
-            ),
-        }
+		local preview = require("actions-preview")
+		preview.setup {
+			diff = {
+				algorithm = "patience",
+				ignore_whitespace = true,
+				ctxlen = 3,
+			},
+			highlight_command = {
+				require("actions-preview.highlight").diff_so_fancy(),
+			},
+			telescope = vim.tbl_extend(
+				"force",
+				require("telescope.themes").get_dropdown(),
+				{
+					make_value = nil,
+					make_make_display = nil,
+				}
+			),
+		}
 
-        -- Code actions popup menu
-        vim.keymap.set({"v", "n"}, "<leader>a", preview.code_actions)
+		-- Code actions popup menu
+		vim.keymap.set({ "v", "n" }, "<leader>a", preview.code_actions)
 
 		cmp.setup {
 			-- Skip automatically selecting the first item
@@ -66,7 +66,9 @@ return {
 				end,
 			},
 			window = {
-				completion = cmp.config.window.bordered(),
+				completion = vim.tbl_deep_extend("force", cmp.config.window.bordered(), {
+					max_width = 50, -- Set max width for the completion menu
+				}),
 				documentation = cmp.config.window.bordered()
 			},
 
