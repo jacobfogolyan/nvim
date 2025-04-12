@@ -168,19 +168,31 @@ return {
 
 		lspconfig.eslint.setup {
 			capabilities = capabilities,
-			version = "*",
 			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
-			root_dir = lspconfig.util.root_pattern(
-				'.eslintrc',
-				'.eslintrc.js',
-				'.eslintrc.json',
-				'.eslintrc.yaml',
-				'.eslintrc.yml',
-				'eslintrc.config.js',
-				'eslint.config.mjs'
-			),
+			root_dir = function(fname)
+				local util = require("lspconfig.util")
+
+				-- First look for eslint config files
+				local eslint_config = util.root_pattern(
+					'.eslintrc',
+					'.eslintrc.js',
+					'.eslintrc.json',
+					'.eslintrc.yaml',
+					'.eslintrc.yml',
+					'eslint.config.js',
+					'eslint.config.mjs'
+				)(fname)
+
+				-- Then look for package.json and tsconfig.json as fallbacks
+				local package_json = util.root_pattern('package.json')(fname)
+				local tsconfig = util.root_pattern('tsconfig.json')(fname)
+
+				-- Return the first valid root directory found
+				return eslint_config or package_json or tsconfig
+			end,
 			settings = {
-				workingDirectory = { mode = 'location' },
+				-- This is critical for monorepos and projects with workspace configurations
+				workingDirectory = { mode = "location" },
 				codeAction = {
 					disableRuleComment = {
 						enable = true,
@@ -191,23 +203,29 @@ return {
 					}
 				},
 				experimental = {
-					useFlatConfig = true
+					useFlatConfig = false -- Set to false since you're using module.exports format
 				},
 				format = { enable = true },
-				-- Add this to improve handling of SVG content
-				html = {
-					-- This tells ESLint to not try to validate HTML/SVG content
-					validate = false
-				},
-				run = "onSave",
+				nodePath = "", -- Set this to your project's node_modules path if needed
+				run = "onType",
+				validate = "on",
 			},
 			on_attach = function(client, bufnr)
 				vim.api.nvim_create_autocmd("BufWritePre", {
 					buffer = bufnr,
 					command = "EslintFixAll",
 				})
-			end
+				-- Debug output
+			end,
+			on_new_config = function(new_config, new_root_dir)
+				-- Support for monorepo structure
+				new_config.settings = new_config.settings or {}
+			end,
+			flags = {
+				debounce_text_changes = 150,
+			}
 		}
+
 		-- Lua LSP
 		lspconfig.lua_ls.setup {
 			settings = {
