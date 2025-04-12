@@ -4,6 +4,7 @@ return {
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		"nvim-treesitter/nvim-treesitter",
+		"ibhagwan/fzf-lua"
 	},
 	schema = {
 		model = {
@@ -63,6 +64,20 @@ When given a task:
 				end,
 
 			},
+			strategies = {
+				chat = {
+					slash_commands = {
+						["buffer"] = {
+							callback = "strategies.chat.slash_commands.buffer",
+							description = "Insert open buffers",
+							opts = {
+								contains_code = true,
+								provider = "fzf_lua", -- Changed from default to telescope
+							},
+						},
+					},
+				},
+			},
 			adapters = {
 				filesystem = {
 					enabled = true,
@@ -89,6 +104,6 @@ When given a task:
 			},
 		}
 		vim.keymap.set("n", "<leader>cc", ":CodeCompanionChat Toggle<cr>", { silent = true, noremap = true })
-        vim.cmd([[cab cc CodeCompanion]])
+		vim.cmd([[cab cc CodeCompanion]])
 	end
 }
