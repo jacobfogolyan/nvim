@@ -9,8 +9,8 @@ return {
 	},
 
 	dependencies = {
-		"williamboman/mason.nvim",
-		"williamboman/mason-lspconfig.nvim",
+		"mason-org/mason.nvim",
+		"mason-org/mason-lspconfig.nvim",
 		"hrsh7th/cmp-nvim-lsp",
 		"folke/lazydev.nvim",
 		"j-hui/fidget.nvim",
@@ -52,7 +52,7 @@ return {
 			lspconfig = true,
 			enabled = true,
 			runtime = vim.env.VIMRUNTIME --[[@as string]],
-			library = {}, ---@type lazydev.Library.spec[]
+			library = {},
 			integrations = {
 				lspconfig = true,
 				cmp = true
@@ -62,6 +62,7 @@ return {
 
 		require("mason-lspconfig").setup {
 			automatic_installation = false,
+			automatic_enable = false,
 			-- These are the language servers that we want automatically installed.
 			ensure_installed = {
 				"gopls",
@@ -99,7 +100,7 @@ return {
 
 		lspconfig.volar.setup {
 			capabilities = capabilities,
-			filetypes = { 'vue', 'typescript', 'javascript' },
+			filetypes = { 'vue' },
 			-- Only activate in Nuxt projects
 			root_dir = lspconfig.util.root_pattern('nuxt.config.ts', 'nuxt.config.js'),
 			init_options = {
@@ -133,19 +134,21 @@ return {
 			}
 		}
 
-		lspconfig.ts_ls.setup {
+		lspconfig.ts_ls.setup({
 			capabilities = capabilities,
-			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact' },
-			-- Exclude Vue files completely from ts_ls
+			filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact" },
 			root_dir = function(fname)
-				if string.match(fname, '%.vue$') then
+				-- Check if file is in a Nuxt project
+				local is_nuxt_project = lspconfig.util.root_pattern("nuxt.config.ts", "nuxt.config.js")(fname)
+
+				-- Return nil for Vue files or any files in a Nuxt project
+				if string.match(fname, "%.vue$") or is_nuxt_project then
 					return nil
 				end
-				return lspconfig.util.root_pattern('nuxt.config.ts', 'nuxt.config.js', 'package.json', 'tsconfig.json',
-					'jsconfig.json', '.git')(fname)
-			end
-		}
 
+				return lspconfig.util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git")(fname)
+			end,
+		})
 		-- Go LSP
 		lspconfig.gopls.setup {
 			settings = {
