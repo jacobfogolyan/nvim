@@ -1,11 +1,15 @@
 return {
 	"mhartington/formatter.nvim",
 	config = function()
+		local util = require("formatter.util")
 		-- Utilities for creating configurations
 		local function format_prettier()
 			return {
-				exe = "prettier", -- Use globally installed prettier
-				args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+				exe = "prettier",
+				args = {
+					"--stdin-filepath",
+					util.escape_path(util.get_current_buffer_file_path())
+				},
 				stdin = true
 			}
 		end
