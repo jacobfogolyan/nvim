@@ -27,6 +27,70 @@ return {
 			has_cmp and cmp_nvim_lsp.default_capabilities() or {}
 		)
 
+		vim.diagnostic.config({
+			virtual_text = {
+				source = "if_many", -- Changed from "always" to "if_many"
+				prefix = "●",
+				format = function(diagnostic)
+					local max_width = 80
+					local message = diagnostic.message
+					if string.len(message) > max_width then
+						return string.sub(message, 1, max_width) .. "..."
+					end
+					return message
+				end,
+			},
+			float = {
+				focusable = false,
+				style = "minimal",
+				border = "rounded",
+				source = "if_many", -- Changed from "always" to "if_many"
+				header = "",
+				prefix = "",
+				max_width = math.min(vim.o.columns - 4, 120),
+				max_height = math.min(vim.o.lines - 4, 30),
+				wrap = true,
+			},
+			signs = true,
+			underline = true,
+			update_in_insert = false,
+			severity_sort = true,
+		})
+
+		-- Configure hover handler for better display
+		vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+			vim.lsp.handlers.hover, {
+				border = "rounded",
+				max_width = 100,
+				max_height = 30,
+			}
+		)
+
+		-- Configure signature help handler
+		vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
+			vim.lsp.handlers.signature_help, {
+				border = "rounded",
+				max_width = 100,
+			}
+		)
+
+		vim.api.nvim_create_autocmd("CursorHold", {
+			buffer = bufnr,
+			callback = function()
+				local opts = {
+					focusable = false,
+					close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+					border = 'rounded',
+					source = 'always',
+					prefix = ' ',
+					scope = 'cursor',
+				}
+				vim.diagnostic.open_float(nil, opts)
+			end
+		})
+
+		vim.opt.updatetime = 300
+
 		require("mason").setup {
 			max_concurrent_installers = 4,
 			ui = {
@@ -61,7 +125,7 @@ return {
 		}
 
 		require("mason-lspconfig").setup {
-			automatic_installation = false,
+			--automatic_installation = false,
 			automatic_enable = false,
 			-- These are the language servers that we want automatically installed.
 			ensure_installed = {
@@ -75,6 +139,7 @@ return {
 				"kotlin_language_server",
 				"yamlls",
 				"lua_ls",
+				"jsonls",
 				"pyright",
 				"ansiblels",
 				"bashls",
@@ -102,10 +167,10 @@ return {
 			capabilities = capabilities,
 			filetypes = { 'vue' },
 			-- Only activate in Nuxt projects
-			root_dir = lspconfig.util.root_pattern('nuxt.config.ts', 'nuxt.config.js'),
+			root_dir = lspconfig.util.root_pattern('vue.config.js', 'nuxt.config.ts', 'nuxt.config.js', 'package.json'),
 			init_options = {
 				typescript = {
-					tsdk = '/Users/jacob/.local/share/nvim/mason/packages/typescript-language-server/node_modules/typescript/lib'
+					tsdk = vim.fn.expand('~/.local/share/nvim/mason/packages/typescript-language-server/node_modules/typescript/lib')
 				},
 				vue = {
 					hybridMode = false, -- Disable hybrid mode to let Volar handle TS
@@ -134,8 +199,42 @@ return {
 			}
 		}
 
+		lspconfig.jsonls.setup {
+			capabilities = capabilities,
+			settings = {
+				json = {
+					schemas = require('schemastore').json.schemas(),
+					validate = { enable = true },
+				},
+			},
+		}
+
 		lspconfig.ts_ls.setup({
 			capabilities = capabilities,
+			settings = {
+				typescript = {
+					inlayHints = {
+						includeInlayParameterNameHints = 'all',
+						includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+						includeInlayFunctionParameterTypeHints = true,
+						includeInlayVariableTypeHints = true,
+						includeInlayPropertyDeclarationTypeHints = true,
+						includeInlayFunctionLikeReturnTypeHints = true,
+						includeInlayEnumMemberValueHints = true,
+					}
+				},
+				javascript = {
+					inlayHints = {
+						includeInlayParameterNameHints = 'all',
+						includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+						includeInlayFunctionParameterTypeHints = true,
+						includeInlayVariableTypeHints = true,
+						includeInlayPropertyDeclarationTypeHints = true,
+						includeInlayFunctionLikeReturnTypeHints = true,
+						includeInlayEnumMemberValueHints = true,
+					}
+				}
+			},
 			filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact" },
 			root_dir = function(fname)
 				-- Check if file is in a Nuxt project
@@ -307,31 +406,6 @@ return {
 				-- LSP reformat current buffer
 				vim.keymap.set("n", "<leader>T", vim.lsp.buf.format)
 			end,
-		})
-
-		-- LSP auto-formatting for Go.
-		-- This will automatically sort imports.
-		vim.api.nvim_create_autocmd("BufWritePre", {
-			pattern = "*.go",
-			callback = function()
-				local params = vim.lsp.util.make_range_params()
-				params.context = { only = { "source.organizeImports" } }
-				-- buf_request_sync defaults to a 1000ms timeout. Depending on your
-				-- machine and codebase, you may want longer. Add an additional
-				-- argument after params if you find that you have to write the file
-				-- twice for changes to be saved.
-				-- E.g., vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 3000)
-				local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params)
-				for cid, res in pairs(result or {}) do
-					for _, r in pairs(res.result or {}) do
-						if r.edit then
-							local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
-							vim.lsp.util.apply_workspace_edit(r.edit, enc)
-						end
-					end
-				end
-				vim.lsp.buf.format({ async = false })
-			end
 		})
 	end
 }

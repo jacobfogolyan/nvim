@@ -5,11 +5,11 @@ return {
 	"mfussenegger/nvim-dap",
 	recommended = true,
 	desc = "Debugging support for JavaScript/TypeScript, Lua, and C++",
-
+enabled = false,
 	dependencies = {
 		"rcarriga/nvim-dap-ui",
 		{
-			"williamboman/mason.nvim",
+			"mason-org/mason.nvim",
 			opts = function(_, opts)
 				opts.ensure_installed = opts.ensure_installed or {}
 				-- Add the debug adapters we need

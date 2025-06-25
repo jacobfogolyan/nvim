@@ -10,11 +10,12 @@ return {
 		model = {
 			-- Always show at top of chat buffer
 			order = 1,
-			default = "claude-3.7-sonnet",
+			default = "claude-sonnet-4-20250514",
 			choices = {
 				"claude-3.5-sonnet",
 				"claude-3.7-sonnet",
-				"claude-3.7-sonnet-thought"
+				"claude-3.7-sonnet-thought",
+				"claude-sonnet-4-20250514"
 			}
 		},
 	},
