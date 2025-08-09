@@ -148,7 +148,7 @@ return {
 				"cmake",
 				"cssls",
 				"taplo",
-				"volar",
+				"vue_ls",
 				"prismals",
 				"arduino_language_server",
 			},
@@ -163,7 +163,7 @@ return {
 			}
 		}
 
-		lspconfig.volar.setup {
+		lspconfig.vue_ls.setup {
 			capabilities = capabilities,
 			filetypes = { 'vue' },
 			-- Only activate in Nuxt projects
