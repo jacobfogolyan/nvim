@@ -5,7 +5,7 @@ return {
 		"hrsh7th/cmp-nvim-lsp",
 		"hrsh7th/cmp-buffer",
 		"hrsh7th/cmp-path",
-		"hrsh7th/cmp-cmdline",
+		-- "hrsh7th/cmp-cmdline", -- Temporarily disabled due to regex parsing error
 		"hrsh7th/cmp-nvim-lsp-signature-help",
 		-- Luasnip snippets
 		"L3MON4D3/LuaSnip",
@@ -43,14 +43,16 @@ return {
 			highlight_command = {
 				require("actions-preview.highlight").diff_so_fancy(),
 			},
-			telescope = vim.tbl_extend(
-				"force",
-				require("telescope.themes").get_dropdown(),
-				{
-					make_value = nil,
-					make_make_display = nil,
-				}
-			),
+			-- Removed telescope theme dependency since Telescope is disabled
+			-- If you re-enable Telescope, uncomment the following:
+			-- telescope = vim.tbl_extend(
+			-- 	"force",
+			-- 	require("telescope.themes").get_dropdown(),
+			-- 	{
+			-- 		make_value = nil,
+			-- 		make_make_display = nil,
+			-- 	}
+			-- ),
 		}
 
 		-- Code actions popup menu

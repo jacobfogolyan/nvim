@@ -71,3 +71,42 @@ vim.g.netrw_winsize = 45
 
 -- Always enable editorconfig
 vim.g.editorconfig = true
+
+-- Performance optimizations
+vim.opt.lazyredraw = true -- Don't redraw while executing macros
+vim.opt.synmaxcol = 240   -- Limit syntax highlighting for long lines
+vim.opt.updatetime = 100  -- Faster completion and diagnostic messages
+vim.opt.timeoutlen = 300  -- Faster key sequence completion
+vim.opt.ttimeoutlen = 10  -- Faster escape key response
+
+-- Better regex engine for performance
+vim.opt.regexpengine = 1
+
+-- Disable some built-in plugins for faster startup
+vim.g.loaded_gzip = 1
+vim.g.loaded_zip = 1
+vim.g.loaded_zipPlugin = 1
+vim.g.loaded_tar = 1
+vim.g.loaded_tarPlugin = 1
+vim.g.loaded_getscript = 1
+vim.g.loaded_getscriptPlugin = 1
+vim.g.loaded_vimball = 1
+vim.g.loaded_vimballPlugin = 1
+vim.g.loaded_2html_plugin = 1
+vim.g.loaded_matchit = 1
+vim.g.loaded_matchparen = 1
+vim.g.loaded_logiPat = 1
+vim.g.loaded_rrhelper = 1
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+vim.g.loaded_netrwSettings = 1
+vim.g.loaded_netrwFileHandlers = 1
+
+-- Optimize for large files
+vim.g.large_file = 1048576 -- 1MB
+vim.cmd([[
+  augroup LargeFile
+    autocmd!
+    autocmd BufReadPre * if getfsize(expand("%")) > g:large_file | setlocal eventignore+=FileType | setlocal noswapfile bufhidden=unload undolevels=-1 | endif
+  augroup END
+]])

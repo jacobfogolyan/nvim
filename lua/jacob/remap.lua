@@ -85,6 +85,6 @@ vim.keymap.set("n", "<leader>t", function()
 end)
 
 -- Buffer management
-vim.keymap.set("n", "<leader>q", ":bdelete<CR>")
+-- vim.keymap.set("n", "<leader>q", ":bdelete<CR>") -- Removed: Using Bdelete from bufdelete.nvim for better window layout preservation
 vim.keymap.set("n", "<leader>bd",":<C-U>bprevious <bar> bdelete #<CR>")
 	

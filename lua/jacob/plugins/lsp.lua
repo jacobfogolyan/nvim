@@ -1,12 +1,9 @@
 return {
 	"neovim/nvim-lspconfig",
 
-	event = {
-		"BufReadPre",
-		"BufNewFile",
-		"InsertEnter",
-		"CmdlineEnter",
-	},
+	-- Lazy load LSP only when needed
+	event = { "BufReadPost", "BufNewFile" },
+	cmd = { "LspInfo", "LspInstall", "LspUninstall" },
 
 	dependencies = {
 		"mason-org/mason.nvim",
@@ -89,7 +86,8 @@ return {
 			end
 		})
 
-		vim.opt.updatetime = 300
+		-- Increase updatetime for better performance
+		vim.opt.updatetime = 750
 
 		require("mason").setup {
 			max_concurrent_installers = 4,
@@ -315,7 +313,7 @@ return {
 				},
 				format = { enable = true },
 				nodePath = "",
-				run = "onType",
+				run = "onSave", -- Change from onType to onSave for better performance
 				validate = "on",
 				-- Add explicit configuration for the parser
 				parserOptions = {
@@ -342,7 +340,7 @@ return {
 				end
 			end,
 			flags = {
-				debounce_text_changes = 150,
+				debounce_text_changes = 300, -- Increase debounce for better performance
 			}
 		}
 

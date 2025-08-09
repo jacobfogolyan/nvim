@@ -1,6 +1,9 @@
 return {
 	"nvim-telescope/telescope.nvim",
 	tag = '0.1.8',
+	enabled = false, -- Disable Telescope in favor of fzf-lua
+	lazy = true,
+	cmd = "Telescope",
 	dependencies = {
 		"nvim-telescope/telescope-ui-select.nvim",
 		"nvim-tree/nvim-web-devicons",

@@ -1,7 +1,8 @@
 return {
 	"tpope/vim-fugitive",
 	config = function()
-		vim.keymap.set("n", "<leader>gs", vim.cmd.Git)
+		-- Open Git status in current window (no split)
+		vim.keymap.set("n", "<leader>gs", "<cmd>0Git<CR>")
 		-- Define highlight groups for different folders
 		vim.api.nvim_set_hl(0, 'GitStatusFrontend', { fg = '#00DC82', bold = true }) -- Nuxt Green
 		vim.api.nvim_set_hl(0, 'GitStatusBackend', { fg = '#D84A66', bold = true }) -- Softer NestJS Red
