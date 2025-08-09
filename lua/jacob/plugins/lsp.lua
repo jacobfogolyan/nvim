@@ -245,7 +245,13 @@ return {
 					return nil
 				end
 
-				return lspconfig.util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git")(fname)
+				local util = require("lspconfig.util")
+				-- Add tsconfig.json to the root_pattern check with highest priority
+				return util.root_pattern("tsconfig.json")(fname) or
+					util.root_pattern("package.json", "jsconfig.json", ".git")(fname)
+
+
+--				return lspconfig.util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git")(fname)
 			end,
 		})
 		-- Go LSP
@@ -278,6 +284,7 @@ return {
 				local eslint_config = util.root_pattern(
 					'.eslintrc',
 					'.eslintrc.js',
+					'.eslintrc.cjs', -- Added .cjs extension
 					'.eslintrc.json',
 					'.eslintrc.yaml',
 					'.eslintrc.yml',
@@ -293,7 +300,6 @@ return {
 				return eslint_config or package_json or tsconfig
 			end,
 			settings = {
-				-- This is critical for monorepos and projects with workspace configurations
 				workingDirectory = { mode = "location" },
 				codeAction = {
 					disableRuleComment = {
@@ -305,28 +311,41 @@ return {
 					}
 				},
 				experimental = {
-					useFlatConfig = false -- Set to false since you're using module.exports format
+					useFlatConfig = false
 				},
 				format = { enable = true },
-				nodePath = "", -- Set this to your project's node_modules path if needed
+				nodePath = "",
 				run = "onType",
 				validate = "on",
+				-- Add explicit configuration for the parser
+				parserOptions = {
+					project = {
+						"./tsconfig.json",
+						"**/tsconfig.json",
+					}
+				}
 			},
 			on_attach = function(client, bufnr)
 				vim.api.nvim_create_autocmd("BufWritePre", {
 					buffer = bufnr,
 					command = "EslintFixAll",
 				})
-				-- Debug output
 			end,
 			on_new_config = function(new_config, new_root_dir)
-				-- Support for monorepo structure
 				new_config.settings = new_config.settings or {}
+
+				-- Try to find tsconfig.json in project root or parent directories
+				local tsconfig_path = new_root_dir .. "/tsconfig.json"
+				if vim.fn.filereadable(tsconfig_path) == 1 then
+					new_config.settings.parserOptions = new_config.settings.parserOptions or {}
+					new_config.settings.parserOptions.project = tsconfig_path
+				end
 			end,
 			flags = {
 				debounce_text_changes = 150,
 			}
 		}
+
 
 		-- Lua LSP
 		lspconfig.lua_ls.setup {
