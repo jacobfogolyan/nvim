@@ -81,5 +81,13 @@ return {
 		vim.cmd([[
 		  autocmd BufNewFile,BufRead Dockerfile-* setfiletype dockerfile
 		]])
+		
+		-- Custom filetype detection for TypeScript declaration files
+		vim.cmd([[
+		  autocmd BufNewFile,BufRead *.d.mts setfiletype typescript
+		  autocmd BufNewFile,BufRead *.d.cts setfiletype typescript
+		  autocmd BufNewFile,BufRead *.mts setfiletype typescript
+		  autocmd BufNewFile,BufRead *.cts setfiletype typescript
+		]])
 	end
 }

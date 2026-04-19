@@ -73,7 +73,7 @@ vim.g.netrw_winsize = 45
 vim.g.editorconfig = true
 
 -- Performance optimizations
-vim.opt.lazyredraw = true -- Don't redraw while executing macros
+-- vim.opt.lazyredraw = true -- Disabled: conflicts with Noice.nvim
 vim.opt.synmaxcol = 240   -- Limit syntax highlighting for long lines
 vim.opt.updatetime = 100  -- Faster completion and diagnostic messages
 vim.opt.timeoutlen = 300  -- Faster key sequence completion

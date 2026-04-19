@@ -5,6 +5,10 @@ return {
 	event = "VeryLazy",
 	config = function()
 		local fzf = require("fzf-lua")
+		
+		-- Store the initial working directory when Neovim starts
+		-- This ensures searches always use the directory where nvim was started
+		local initial_cwd = vim.fn.getcwd()
 
 		fzf.setup({
 			-- Use native fzf binary for maximum speed
@@ -62,20 +66,31 @@ return {
 		})
 
 		-- Keymaps - keeping the same as your Telescope mappings for seamless transition
-		vim.keymap.set("n", "<leader>f", fzf.files, { desc = "Find files" })
-		vim.keymap.set("n", "<leader>F", fzf.live_grep, { desc = "Live grep" })
+		-- All search functions use the initial working directory to maintain consistent scope
+		vim.keymap.set("n", "<leader>f", function()
+			fzf.files({ cwd = initial_cwd })
+		end, { desc = "Find files" })
+		vim.keymap.set("n", "<leader>F", function()
+			fzf.live_grep({ cwd = initial_cwd })
+		end, { desc = "Live grep" })
 		vim.keymap.set("n", "<leader>b", fzf.buffers, { desc = "Find buffers" })
 		vim.keymap.set("n", "<leader>ps", function()
-			fzf.grep({ search = vim.fn.input("Grep > ") })
+			fzf.grep({ search = vim.fn.input("Grep > "), cwd = initial_cwd })
 		end, { desc = "Grep with input" })
 		vim.keymap.set("n", "<leader>vh", fzf.help_tags, { desc = "Help tags" })
-		vim.keymap.set("n", "<C-p>", fzf.git_files, { desc = "Git files" })
+		vim.keymap.set("n", "<C-p>", function()
+			fzf.git_files({ cwd = initial_cwd })
+		end, { desc = "Git files" })
 		vim.keymap.set("n", "<leader>of", fzf.oldfiles, { desc = "Old files" })
 		vim.keymap.set("n", "<leader>r", fzf.registers, { desc = "Registers" }) -- Preserving original Telescope binding
 
 		-- Additional ultra-fast search commands
-		vim.keymap.set("n", "<leader>sw", fzf.grep_cword, { desc = "Search word under cursor" })
-		vim.keymap.set("n", "<leader>sW", fzf.grep_cWORD, { desc = "Search WORD under cursor" })
+		vim.keymap.set("n", "<leader>sw", function()
+			fzf.grep_cword({ cwd = initial_cwd })
+		end, { desc = "Search word under cursor" })
+		vim.keymap.set("n", "<leader>sW", function()
+			fzf.grep_cWORD({ cwd = initial_cwd })
+		end, { desc = "Search WORD under cursor" })
 		vim.keymap.set("n", "<leader>sl", fzf.blines, { desc = "Search in current buffer" })
 		vim.keymap.set("n", "<leader>sr", fzf.resume, { desc = "Resume last search" })
 

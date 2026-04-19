@@ -1,7 +1,7 @@
 -- Performance optimizations for Neovim
 return {
-	-- Faster file type detection
-	{ "nathom/filetype.nvim", lazy = false, priority = 100 },
+	-- NOTE: filetype.nvim is no longer needed - Neovim has built-in fast filetype detection since v0.8+
+	-- Removed to fix shell script treesitter compatibility issues
 
 	-- Better buffer deletion without messing up window layout
 	{

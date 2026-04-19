@@ -6,6 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a personal Neovim configuration repository using Lua. The configuration follows a modular structure with Lazy.nvim as the plugin manager and includes 33+ plugins for development across multiple languages.
 
+## CRITICAL RULES
+
+### Keybinding Preservation Policy
+**NEVER CHANGE EXISTING KEYBINDINGS WITHOUT EXPLICIT PERMISSION**
+
+1. **Check KEYBINDINGS.md** before making any changes that might affect keybindings
+2. **Preserve all existing keybindings** when replacing or updating plugins
+3. **Ask for permission** before changing any keybinding, even if it seems like an improvement
+4. **Document conflicts** in KEYBINDINGS.md and propose solutions for user approval
+5. **Map new functionality** to unused keys only after confirming they're available
+
+See `/Users/jacob/.config/nvim/KEYBINDINGS.md` for the complete keybinding reference.
+
 ## Architecture
 
 ### Core Structure

@@ -20,7 +20,9 @@ return {
 			lsp_file_methods = {
 				enabled = true
 			},
-			-- Add keymaps for opening all files in a directory
+			-- Preserve Oil's default keymaps (Enter to open, - for parent, g? for help)
+			use_default_keymaps = true,
+			-- Add custom keymaps for opening all files in a directory
 			keymaps = {
 				["<leader>a"] = {
 					callback = function()
@@ -95,4 +97,3 @@ return {
 		vim.keymap.set("n", "<C-o>", "<CMD>Oil<CR>", { desc = "Open parent directory" })
 	end
 }
-

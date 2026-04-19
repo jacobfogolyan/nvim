@@ -155,6 +155,9 @@ return {
 			settings = {
 				typescript = {
 					inlayHints = {
+						enumMemberValues = {
+							enabled = true,
+						},
 						includeInlayParameterNameHints = 'all',
 						includeInlayParameterNameHintsWhenArgumentMatchesName = false,
 						includeInlayFunctionParameterTypeHints = true,
@@ -187,7 +190,7 @@ return {
 					{
 						name = '@vue/typescript-plugin',
 						location = vim.fn.stdpath 'data' ..
-						'/mason/packages/vue-language-server/node_modules/@vue/language-server',
+							'/mason/packages/vue-language-server/node_modules/@vue/language-server',
 						languages = { 'vue' },
 					},
 				},

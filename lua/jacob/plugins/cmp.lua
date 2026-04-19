@@ -43,16 +43,6 @@ return {
 			highlight_command = {
 				require("actions-preview.highlight").diff_so_fancy(),
 			},
-			-- Removed telescope theme dependency since Telescope is disabled
-			-- If you re-enable Telescope, uncomment the following:
-			-- telescope = vim.tbl_extend(
-			-- 	"force",
-			-- 	require("telescope.themes").get_dropdown(),
-			-- 	{
-			-- 		make_value = nil,
-			-- 		make_make_display = nil,
-			-- 	}
-			-- ),
 		}
 
 		-- Code actions popup menu
@@ -67,12 +57,17 @@ return {
 					-- require("snippy").expand_snippet(args.body) -- Snippy snippets
 				end,
 			},
-			window = {
-				completion = vim.tbl_deep_extend("force", cmp.config.window.bordered(), {
-					max_width = 50, -- Set max width for the completion menu
-				}),
-				documentation = cmp.config.window.bordered()
-			},
+			--window = {
+			--	completion = vim.tbl_deep_extend("force", cmp.config.window.bordered(), {
+			--		col_offset = 0,
+			--		side_padding = 1,
+			--		max_width = 40,
+			--	}),
+			--	documentation = vim.tbl_deep_extend("force", cmp.config.window.bordered(), {
+			--		max_width = 80,
+			--		max_height = 20,
+			--	})
+			--},
 
 			mapping = cmp.mapping.preset.insert({
 				["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
@@ -115,10 +110,6 @@ return {
 					item.menu = entry:get_completion_item().detail
 					return item
 				end,
-			},
-
-			completion = {
-				completeopt = "menu,menuone,noinsert",
 			},
 
 			experimental = {
