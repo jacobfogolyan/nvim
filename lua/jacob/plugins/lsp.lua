@@ -12,7 +12,9 @@ return {
 	},
 	config = function()
 		local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-		local lspconfig = require("lspconfig")
+		-- `require("lspconfig")` is deprecated (removed in nvim-lspconfig v3).
+		-- Server configs now come from nvim-lspconfig's `lsp/*.lua` specs and are
+		-- customised via `vim.lsp.config()` / activated via `vim.lsp.enable()`.
 		local capabilities = vim.tbl_deep_extend(
 			"force",
 			{},
@@ -48,29 +50,19 @@ return {
 			update_in_insert = false,
 			severity_sort = true,
 		})
-		-- Configure hover handler for better display
-		vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-			vim.lsp.handlers.hover, {
-				border = "rounded",
-				max_width = 100,
-				max_height = 30,
-			}
-		)
-		-- Configure signature help handler
-		vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-			vim.lsp.handlers.signature_help, {
-				border = "rounded",
-				max_width = 100,
-			}
-		)
+		-- `vim.lsp.with()` is deprecated; hover/signature_help take these options
+		-- directly at the call site instead (see the LspAttach keymaps below).
+		local hover_opts = { border = "rounded", max_width = 100, max_height = 30 }
+		local signature_opts = { border = "rounded", max_width = 100 }
+
 		vim.api.nvim_create_autocmd("CursorHold", {
-			buffer = bufnr,
 			callback = function()
 				local opts = {
 					focusable = false,
 					close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
 					border = 'rounded',
-					source = 'always',
+					-- `source = 'always'` was deprecated in favour of a boolean.
+					source = true,
 					prefix = ' ',
 					scope = 'cursor',
 				}
@@ -110,9 +102,17 @@ return {
 			},
 			debug = false
 		}
+		-- Applied to every server, replacing the old mason-lspconfig `handlers`
+		-- default handler (removed in mason-lspconfig v2).
+		vim.lsp.config("*", {
+			capabilities = capabilities,
+		})
+
 		require("mason-lspconfig").setup {
 			--automatic_installation = false,
-			automatic_enable = false,
+			-- v2 replacement for the removed `handlers` option: every installed
+			-- server is enabled automatically, picking up the `*` config above.
+			automatic_enable = true,
 			-- These are the language servers that we want automatically installed.
 			ensure_installed = {
 				"clangd",
@@ -131,27 +131,17 @@ return {
 				"taplo",
 				"prismals",
 			},
-			handlers = {
-				-- Default handler
-				function(server_name)
-					lspconfig[server_name].setup {
-						capabilities = capabilities,
-					}
-				end
-			}
 		}
 
-		lspconfig.jsonls.setup {
-			capabilities = capabilities,
+		vim.lsp.config("jsonls", {
 			settings = {
 				json = {
 					schemas = require('schemastore').json.schemas(),
 					validate = { enable = true },
 				},
 			},
-		}
-		lspconfig.ts_ls.setup({
-			capabilities = capabilities,
+		})
+		vim.lsp.config("ts_ls", {
 			settings = {
 				typescript = {
 					inlayHints = {
@@ -181,10 +171,8 @@ return {
 				},
 			},
 			filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" }, -- Include vue
-			root_dir = function(fname)
-				local util = require("lspconfig.util")
-				return util.root_pattern("tsconfig.json", "package.json", "jsconfig.json", ".git")(fname) -- Simplified for all filetypes
-			end,
+			-- List order is priority, matching the old `util.root_pattern` call.
+			root_markers = { "tsconfig.json", "package.json", "jsconfig.json", ".git" },
 			init_options = {
 				plugins = {
 					{
@@ -200,19 +188,15 @@ return {
 			},
 		})
 
-		lspconfig.eslint.setup {
-			capabilities = capabilities,
+		vim.lsp.config("eslint", {
 			filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
-			root_dir = function(fname)
-				local util = require("lspconfig.util")
-				local eslint_config = util.root_pattern(
-					'.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json',
-					'.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.mjs'
-				)(fname)
-				local package_json = util.root_pattern('package.json')(fname)
-				local tsconfig = util.root_pattern('tsconfig.json')(fname)
-				return eslint_config or package_json or tsconfig
-			end,
+			-- List order is priority: eslint configs first, then package.json,
+			-- then tsconfig.json — matching the old root_dir fallback chain.
+			root_markers = {
+				'.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json',
+				'.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.mjs',
+				'package.json', 'tsconfig.json',
+			},
 			settings = {
 				workingDirectory = { mode = "location" },
 				codeAction = {
@@ -236,20 +220,25 @@ return {
 					command = "EslintFixAll",
 				})
 			end,
-			on_new_config = function(new_config, new_root_dir)
-				new_config.settings = new_config.settings or {}
-				local tsconfig_path = new_root_dir .. "/tsconfig.json"
+			-- `on_new_config` was an nvim-lspconfig hook; `before_init` is the
+			-- vim.lsp equivalent and still sees the resolved root_dir.
+			before_init = function(_, config)
+				if not config.root_dir then
+					return
+				end
+				local tsconfig_path = config.root_dir .. "/tsconfig.json"
 				if vim.fn.filereadable(tsconfig_path) == 1 then
-					new_config.settings.parserOptions = new_config.settings.parserOptions or {}
-					new_config.settings.parserOptions.project = tsconfig_path
+					config.settings = config.settings or {}
+					config.settings.parserOptions = config.settings.parserOptions or {}
+					config.settings.parserOptions.project = tsconfig_path
 				end
 			end,
 			flags = {
 				debounce_text_changes = 300,
 			},
-		}
+		})
 		-- Lua LSP
-		lspconfig.lua_ls.setup {
+		vim.lsp.config("lua_ls", {
 			settings = {
 				Lua = {
 					runtime = {
@@ -267,13 +256,12 @@ return {
 					}
 				}
 			}
-		}
-		lspconfig.clangd.setup {
-			capabilities = capabilities,
+		})
+		vim.lsp.config("clangd", {
 			filetypes = {
 				"c", "cpp", "proto",
 			},
-		}
+		})
 		local function vSplitAndExecute(callback)
 			vim.cmd("vsplit")
 			vim.cmd("wincmd l")
@@ -285,13 +273,15 @@ return {
 			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 			callback = function(event)
 				local opts = { buffer = event.buf }
-				vim.keymap.set("n", "K", "<cmd>lua vim.lsp.buf.hover()<cr>", opts)
+				vim.keymap.set("n", "K", function() vim.lsp.buf.hover(hover_opts) end, opts)
 				vim.keymap.set("n", "gd", function() vSplitAndExecute(vim.lsp.buf.definition) end, opts)
 				vim.keymap.set("n", "gD", function() vSplitAndExecute(vim.lsp.buf.declaration) end, opts)
 				vim.keymap.set("n", "gi", function() vSplitAndExecute(vim.lsp.buf.implementation) end, opts)
 				vim.keymap.set("n", "go", function() vSplitAndExecute(vim.lsp.buf.type_definition) end, opts)
 				vim.keymap.set("n", "gr", function() vSplitAndExecute(vim.lsp.buf.references) end, opts)
-				vim.keymap.set("n", "gs", function() vSplitAndExecute(vim.lsp.buf.signature_help) end, opts)
+				vim.keymap.set("n", "gs", function()
+					vSplitAndExecute(function() vim.lsp.buf.signature_help(signature_opts) end)
+				end, opts)
 				vim.keymap.set("n", "<F2>", "<cmd>lua vim.lsp.buf.rename()<cr>", opts)
 				vim.keymap.set({ "n", "x" }, "fb", "<cmd>lua vim.lsp.buf.format({async = true})<cr>", opts)
 				vim.keymap.set("n", "<leader>a", "<cmd>lua vim.lsp.buf.code_action()<cr>", opts)
