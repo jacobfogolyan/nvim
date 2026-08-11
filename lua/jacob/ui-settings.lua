@@ -132,7 +132,9 @@ function M.setup()
 	
 	-- Fold settings (managed by nvim-ufo)
 	vim.opt.foldmethod = "expr"
-	vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+	-- `nvim_treesitter#foldexpr()` was removed in the nvim-treesitter rewrite;
+	-- Neovim provides treesitter folding natively.
+	vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 	
 	-- Set leader key
 	vim.g.mapleader = " "
