@@ -1,5 +1,6 @@
 return {
-    "ggandor/leap.nvim",
+    -- Upstream moved from GitHub to Codeberg.
+    url = "https://codeberg.org/andyg/leap.nvim",
     config = function ()
         require("leap").setup {
             case_sensitive = false,
