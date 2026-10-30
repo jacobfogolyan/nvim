@@ -262,10 +262,35 @@ return {
 				"c", "cpp", "proto",
 			},
 		})
-		local function vSplitAndExecute(callback)
-			vim.cmd("vsplit")
-			vim.cmd("wincmd l")
-			if callback then callback() end
+		-- Ask the LSP first and split only once it returns locations (an empty
+		-- result just notifies). Several results also open the quickfix list.
+		local function vSplitAndExecute(lsp_fn)
+			lsp_fn({
+				on_list = function(list)
+					vim.fn.setqflist({}, " ", list)
+					vim.cmd("vsplit")
+					vim.cmd("wincmd l")
+					vim.cmd("cfirst")
+					if #list.items > 1 then
+						vim.cmd("botright copen")
+						vim.cmd("wincmd p")
+					end
+				end,
+			})
+		end
+		-- K in TypeScript: show the fully merged members of the type under the cursor
+		-- (scripts/ts-members.cjs). Falls back to the normal hover when it has nothing.
+		local ts_members_script = vim.fn.stdpath("config") .. "/scripts/ts-members.cjs"
+		local function tsMembersHover()
+			local cursor = vim.api.nvim_win_get_cursor(0)
+			local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
+			local cmd = { "node", ts_members_script, vim.api.nvim_buf_get_name(0), tostring(cursor[1] - 1), tostring(cursor[2]) }
+			vim.system(cmd, { stdin = text, text = true }, vim.schedule_wrap(function(res)
+				if res.code ~= 0 or res.stdout == "" then
+					return vim.lsp.buf.hover(hover_opts)
+				end
+				vim.lsp.util.open_floating_preview(vim.split(vim.trim(res.stdout), "\n"), "typescript", hover_opts)
+			end))
 		end
 		-- LSP keymap shortcuts
 		-- Only remap keys after language server has attached to current buffer
@@ -273,15 +298,21 @@ return {
 			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 			callback = function(event)
 				local opts = { buffer = event.buf }
-				vim.keymap.set("n", "K", function() vim.lsp.buf.hover(hover_opts) end, opts)
+				local ft = vim.bo[event.buf].filetype
+				if ft == "typescript" or ft == "typescriptreact" then
+					vim.keymap.set("n", "K", tsMembersHover, opts)
+				else
+					vim.keymap.set("n", "K", function() vim.lsp.buf.hover(hover_opts) end, opts)
+				end
+				vim.keymap.set("n", "<leader>K", function() vim.lsp.buf.hover(hover_opts) end, opts)
 				vim.keymap.set("n", "gd", function() vSplitAndExecute(vim.lsp.buf.definition) end, opts)
 				vim.keymap.set("n", "gD", function() vSplitAndExecute(vim.lsp.buf.declaration) end, opts)
 				vim.keymap.set("n", "gi", function() vSplitAndExecute(vim.lsp.buf.implementation) end, opts)
 				vim.keymap.set("n", "go", function() vSplitAndExecute(vim.lsp.buf.type_definition) end, opts)
-				vim.keymap.set("n", "gr", function() vSplitAndExecute(vim.lsp.buf.references) end, opts)
-				vim.keymap.set("n", "gs", function()
-					vSplitAndExecute(function() vim.lsp.buf.signature_help(signature_opts) end)
+				vim.keymap.set("n", "gr", function()
+					vSplitAndExecute(function(o) vim.lsp.buf.references(nil, o) end)
 				end, opts)
+				vim.keymap.set("n", "gs", function() vim.lsp.buf.signature_help(signature_opts) end, opts)
 				vim.keymap.set("n", "<F2>", "<cmd>lua vim.lsp.buf.rename()<cr>", opts)
 				vim.keymap.set({ "n", "x" }, "fb", "<cmd>lua vim.lsp.buf.format({async = true})<cr>", opts)
 				vim.keymap.set("n", "<leader>a", "<cmd>lua vim.lsp.buf.code_action()<cr>", opts)

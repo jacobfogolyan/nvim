@@ -37,13 +37,14 @@ When replacing plugins or adding new functionality:
 ### LSP Keybindings (from lsp.lua)
 | Keybinding | Function | Source |
 |------------|----------|--------|
-| `K` | Hover documentation | lsp.lua:411 |
+| `K` | Hover. In TypeScript: fully merged members of the type under the cursor (scripts/ts-members.cjs), else normal hover | lsp.lua |
+| `<leader>K` | Plain LSP hover (docs, signatures) | lsp.lua |
 | `gd` | Go to definition (vsplit) | lsp.lua:413 |
 | `gD` | Go to declaration (vsplit) | lsp.lua:414 |
 | `gi` | Go to implementation (vsplit) | lsp.lua:415 |
 | `go` | Go to type definition (vsplit) | lsp.lua:416 |
 | `gr` | Go to references (vsplit) | lsp.lua:417 |
-| `gs` | Signature help (vsplit) | lsp.lua:418 |
+| `gs` | Signature help (popup) | lsp.lua |
 | `<F2>` | Rename symbol | lsp.lua:419 |
 | `fb` | Format buffer (async) | lsp.lua:420 |
 | `<leader>a` | Code actions | lsp.lua:423 |
