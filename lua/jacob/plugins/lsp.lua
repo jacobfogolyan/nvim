@@ -369,8 +369,14 @@ return {
 				local ft = vim.bo[event.buf].filetype
 				if ft == "typescript" or ft == "typescriptreact" then
 					vim.keymap.set("n", "K", tsMembersHover, opts)
-					-- Warm the server now so the first K is fast too.
-					membersRequest({ file = vim.api.nvim_buf_get_name(event.buf), line = 0, col = 0, text = "" }, function() end)
+					-- Warm the server with this buffer's real text so its imports (e.g.
+					-- vitest's types) are parsed now, not on the first K.
+					membersRequest({
+						file = vim.api.nvim_buf_get_name(event.buf),
+						line = 0,
+						col = 0,
+						text = table.concat(vim.api.nvim_buf_get_lines(event.buf, 0, -1, false), "\n"),
+					}, function() end)
 				else
 					vim.keymap.set("n", "K", function() vim.lsp.buf.hover(hover_opts) end, opts)
 				end

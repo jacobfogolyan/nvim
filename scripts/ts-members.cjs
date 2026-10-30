@@ -70,21 +70,44 @@ function members({ file, line, col, text }) {
   if (!symbol) return null;
   if (symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol);
 
-  // `Error`, `ClosedError`, `Foo` -> the instance shape. `e`, `opts` -> the value's type.
+  // Where the name is used as a type (`: Error`, `extends Error`, `new Error()`, its own
+  // declaration) show the instance shape. Used as a value (`Promise.reject`, `e`) show
+  // that value's type, so `Promise` there lists reject/resolve/all, not then/catch.
+  const p = node.parent;
+  const usedAsType =
+    ts.isTypeReferenceNode(p) ||
+    ts.isExpressionWithTypeArguments(p) ||
+    (ts.isNewExpression(p) && p.expression === node) ||
+    ((ts.isClassLike(p) || ts.isInterfaceDeclaration(p) || ts.isTypeAliasDeclaration(p)) && p.name === node);
   const typeLike = ts.SymbolFlags.Class | ts.SymbolFlags.Interface | ts.SymbolFlags.TypeAlias;
-  const type = symbol.flags & typeLike ? checker.getDeclaredTypeOfSymbol(symbol) : checker.getTypeOfSymbolAtLocation(symbol, node);
+  const type =
+    usedAsType && symbol.flags & typeLike ? checker.getDeclaredTypeOfSymbol(symbol) : checker.getTypeOfSymbolAtLocation(symbol, node);
 
   const props = checker.getPropertiesOfType(type);
   if (props.length === 0) return null;
 
+  // Printed as a real interface so the float gets proper TypeScript highlighting.
   const fmt = ts.TypeFormatFlags.NoTruncation;
-  const declaredIn = [...new Set((symbol.declarations ?? []).map((d) => path.basename(d.getSourceFile().fileName)))];
-  const out = [`// ${node.text}: ${checker.typeToString(type, undefined, fmt)}`];
-  if (declaredIn.length > 1) out.push(`// merged from ${declaredIn.join(", ")}`);
-  out.push("{");
-  for (const p of props) {
-    const optional = p.flags & ts.SymbolFlags.Optional ? "?" : "";
-    out.push(`  ${p.name}${optional}: ${checker.typeToString(checker.getTypeOfSymbolAtLocation(p, node), undefined, fmt)};`);
+  const typeName = checker.typeToString(type, undefined, fmt);
+  const out = [];
+  if (typeName !== node.text && !typeName.startsWith(`${node.text}<`)) out.push(`// ${node.text}: ${typeName}`);
+  const declaredIn = [
+    ...new Set((symbol.declarations ?? []).map((d) => path.basename(d.getSourceFile().fileName).replace(/^lib\.|\.d\.ts$|\.tsx?$/g, ""))),
+  ];
+  if (declaredIn.length > 1) out.push(`// merged from: ${declaredIn.join(", ")}`);
+  out.push(/^[\w$.]+(<.*>)?$/.test(typeName) ? `interface ${typeName} {` : `type ${node.text} = {`);
+  for (const prop of props) {
+    // symbolToString turns internal keys like `__@toStringTag@33` into `[Symbol.toStringTag]`.
+    const name = checker.symbolToString(prop);
+    const optional = prop.flags & ts.SymbolFlags.Optional ? "?" : "";
+    const propType = checker.getTypeOfSymbolAtLocation(prop, node);
+    const signatures = propType.getCallSignatures();
+    // Methods: one line per overload, written like `all<T>(values: ...): Promise<...>`.
+    if (prop.flags & ts.SymbolFlags.Method && signatures.length > 0) {
+      for (const sig of signatures) out.push(`  ${name}${optional}${checker.signatureToString(sig, undefined, fmt)};`);
+    } else {
+      out.push(`  ${name}${optional}: ${checker.typeToString(propType, undefined, fmt)};`);
+    }
   }
   out.push("}");
   return out.join("\n");
