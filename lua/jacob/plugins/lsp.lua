@@ -52,11 +52,43 @@ return {
 		})
 		-- `vim.lsp.with()` is deprecated; hover/signature_help take these options
 		-- directly at the call site instead (see the LspAttach keymaps below).
-		local hover_opts = { border = "rounded", max_width = 100, max_height = 30 }
+		-- Hover prefers below the line; the CursorHold diagnostic stacks under it.
+		local hover_opts = { border = "rounded", max_width = 100, max_height = 30, anchor_bias = "below" }
 		local signature_opts = { border = "rounded", max_width = 100 }
+
+		-- With a hover open, move the diagnostic float to sit just under it (or just
+		-- above it when the hover had to open above the cursor). Without a hover the
+		-- diagnostic float keeps its normal spot.
+		local function stackDiagnosticOnHover(hover)
+			local diag = vim.b.diagnostic_float
+			if not (diag and hover and diag ~= hover and vim.api.nvim_win_is_valid(diag) and vim.api.nvim_win_is_valid(hover)) then
+				return
+			end
+			local hover_cfg = vim.api.nvim_win_get_config(hover)
+			local below = hover_cfg.anchor:sub(1, 1) == "N"
+			vim.api.nvim_win_set_config(diag, {
+				relative = "win",
+				win = hover,
+				anchor = below and "NW" or "SW",
+				row = below and hover_cfg.height + 1 or -1,
+				col = -1,
+			})
+		end
+
+		-- Every hover (K, <leader>K, the merged-type popup) opens through here.
+		local open_floating_preview = vim.lsp.util.open_floating_preview
+		vim.lsp.util.open_floating_preview = function(...)
+			local buf, win = open_floating_preview(...)
+			stackDiagnosticOnHover(win)
+			return buf, win
+		end
 
 		vim.api.nvim_create_autocmd("CursorHold", {
 			callback = function()
+				local open = vim.b.diagnostic_float
+				if open and vim.api.nvim_win_is_valid(open) then
+					return
+				end
 				local opts = {
 					focusable = false,
 					close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
@@ -66,7 +98,15 @@ return {
 					prefix = ' ',
 					scope = 'cursor',
 				}
-				vim.diagnostic.open_float(nil, opts)
+				-- open_floating_preview allows one float per buffer and closes the last
+				-- one. Hide the hover from it so the hover survives, and keep the
+				-- diagnostic float out of that slot so a later hover doesn't close it.
+				local hover = vim.b.lsp_floating_preview
+				vim.b.lsp_floating_preview = nil
+				local _, win = vim.diagnostic.open_float(nil, opts)
+				vim.b.lsp_floating_preview = hover
+				vim.b.diagnostic_float = win
+				stackDiagnosticOnHover(hover)
 			end
 		})
 		-- Increase updatetime for better performance
@@ -280,17 +320,45 @@ return {
 		end
 		-- K in TypeScript: show the fully merged members of the type under the cursor
 		-- (scripts/ts-members.cjs). Falls back to the normal hover when it has nothing.
+		-- The script runs as one long-lived server so TypeScript and its lib files
+		-- stay loaded: ~250ms for the first request, ~15ms after that.
 		local ts_members_script = vim.fn.stdpath("config") .. "/scripts/ts-members.cjs"
+		local members_server, members_waiting, members_buf = nil, {}, ""
+		local function membersRequest(req, on_reply)
+			if not members_server then
+				members_server = vim.system({ "node", ts_members_script, "--serve" }, {
+					stdin = true,
+					stdout = function(_, data)
+						members_buf = members_buf .. (data or "")
+						for line in members_buf:gmatch("([^\n]*)\n") do
+							local cb = table.remove(members_waiting, 1)
+							if cb then vim.schedule(function() cb(vim.json.decode(line).out) end) end
+						end
+						members_buf = members_buf:match("[^\n]*$")
+					end,
+				}, function()
+					-- Server died: answer anyone still waiting, restart on the next K.
+					local waiting = members_waiting
+					members_server, members_waiting, members_buf = nil, {}, ""
+					for _, cb in ipairs(waiting) do vim.schedule(function() cb(vim.NIL) end) end
+				end)
+			end
+			table.insert(members_waiting, on_reply)
+			members_server:write(vim.json.encode(req) .. "\n")
+		end
 		local function tsMembersHover()
 			local cursor = vim.api.nvim_win_get_cursor(0)
-			local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
-			local cmd = { "node", ts_members_script, vim.api.nvim_buf_get_name(0), tostring(cursor[1] - 1), tostring(cursor[2]) }
-			vim.system(cmd, { stdin = text, text = true }, vim.schedule_wrap(function(res)
-				if res.code ~= 0 or res.stdout == "" then
+			membersRequest({
+				file = vim.api.nvim_buf_get_name(0),
+				line = cursor[1] - 1,
+				col = cursor[2],
+				text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n"),
+			}, function(out)
+				if type(out) ~= "string" then
 					return vim.lsp.buf.hover(hover_opts)
 				end
-				vim.lsp.util.open_floating_preview(vim.split(vim.trim(res.stdout), "\n"), "typescript", hover_opts)
-			end))
+				vim.lsp.util.open_floating_preview(vim.split(out, "\n"), "typescript", hover_opts)
+			end)
 		end
 		-- LSP keymap shortcuts
 		-- Only remap keys after language server has attached to current buffer
@@ -301,6 +369,8 @@ return {
 				local ft = vim.bo[event.buf].filetype
 				if ft == "typescript" or ft == "typescriptreact" then
 					vim.keymap.set("n", "K", tsMembersHover, opts)
+					-- Warm the server now so the first K is fast too.
+					membersRequest({ file = vim.api.nvim_buf_get_name(event.buf), line = 0, col = 0, text = "" }, function() end)
 				else
 					vim.keymap.set("n", "K", function() vim.lsp.buf.hover(hover_opts) end, opts)
 				end

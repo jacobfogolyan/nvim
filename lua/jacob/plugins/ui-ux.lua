@@ -311,6 +311,9 @@ return {
 		event = "VeryLazy",
 		opts = {
 			lsp = {
+				-- Hovers use Neovim's own float (lsp.lua) so the diagnostic float can
+				-- stack under them; noice's hover window is invisible to that.
+				hover = { enabled = false },
 				override = {
 					["vim.lsp.util.convert_input_to_markdown_lines"] = true,
 					["vim.lsp.util.stylize_markdown"] = true,
